@@ -1,8 +1,0 @@
-pyproject.toml
-git_summarize/cli.py
-git_summarize.egg-info/PKG-INFO
-git_summarize.egg-info/SOURCES.txt
-git_summarize.egg-info/dependency_links.txt
-git_summarize.egg-info/entry_points.txt
-git_summarize.egg-info/requires.txt
-git_summarize.egg-info/top_level.txt
