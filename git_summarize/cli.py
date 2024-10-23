@@ -1,16 +1,16 @@
 # git_summarize/cli.py
 import subprocess
-import openai
 import os
 import sys
 import argparse
+from openai import OpenAI
 
 def setup_openai():
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         print("Error: OPENAI_API_KEY environment variable is not set")
         sys.exit(1)
-    openai.api_key = api_key
+    return OpenAI(api_key=api_key)
 
 def get_git_diff():
     try:
@@ -22,9 +22,9 @@ def get_git_diff():
               "and have staged changes.")
         return None
 
-def summarize_with_openai(diff_text, model="gpt-3.5-turbo"):
+def summarize_with_openai(client, diff_text, model="gpt-3.5-turbo"):
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model=model,
             messages=[
                 {"role": "system", 
@@ -53,11 +53,11 @@ def main():
     )
     args = parser.parse_args()
 
-    setup_openai()
+    client = setup_openai()
     diff_text = get_git_diff()
     
     if diff_text:
-        commit_message = summarize_with_openai(diff_text, model=args.model)
+        commit_message = summarize_with_openai(client, diff_text, model=args.model)
         if commit_message:
             print("\nSuggested commit message:")
             print("-" * 40)
@@ -79,3 +79,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
