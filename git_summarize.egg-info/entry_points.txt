@@ -1,0 +1,2 @@
+[console_scripts]
+git-summarize = git_summarize.cli:main

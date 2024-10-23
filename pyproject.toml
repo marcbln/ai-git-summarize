@@ -1,0 +1,10 @@
+# pyproject.toml
+[project]
+name = "git-summarize"
+version = "0.1.0"
+description = "Generate commit messages using OpenAI"
+dependencies = ["openai>=1.0.0"]
+
+[project.scripts]
+git-summarize = "git_summarize.cli:main"
+
