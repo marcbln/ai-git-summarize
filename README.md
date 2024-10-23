@@ -1,4 +1,4 @@
-# git-summarize
+# ai-git-summarize
 
 A command-line tool that uses OpenAI's API to generate meaningful git commit messages by analyzing your staged changes.
 
