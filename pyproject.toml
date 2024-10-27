@@ -3,9 +3,10 @@
 name = "git-summarize"
 version = "0.2.0"
 description = "Generate commit messages using LLM"
-dependencies = ["openai>=1.0.0"]
+dependencies = [
+    "openai>=1.0.0",
+    "typer>=0.6.1"
+]
 
 [project.scripts]
-git-summarize = "git_summarize.cli:main"
-git-summarize-v2 = "git_summarize.cli_v2:main"
-
+git-summarize = "git_summarize.cli:app"

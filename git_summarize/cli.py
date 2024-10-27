@@ -2,10 +2,12 @@
 import subprocess
 import os
 import sys
-import argparse
 import json
 from openai import OpenAI
 from .prompt_builder import PromptBuilder
+import typer
+
+app = typer.Typer()
 
 def setup_openai(model: str):
     print(f"\nSetting up client for model: {model}")
@@ -82,23 +84,14 @@ def summarize_with_openai(client, diff_text, model="gpt-3.5-turbo"):
             print(f"Response details: {e.response}")
         return None
 
-def main():
-    parser = argparse.ArgumentParser(
-        description='Generate commit messages from git diff using AI'
-    )
-    parser.add_argument(
-        '--model', 
-        default='openrouter/qwen/qwen-2.5-72b-instruct',
-        help='Model to use (default: gpt-3.5-turbo, for OpenRouter prefix with "openrouter/")'
-    )
-    args = parser.parse_args()
-
-    print(f"\nStarting git-summarize with model: {args.model}")
-    client = setup_openai(args.model)
+@app.command()
+def main(model: str = typer.Option("openrouter/qwen/qwen-2.5-72b-instruct", help="Model to use (default: gpt-3.5-turbo, for OpenRouter prefix with 'openrouter/')")):
+    print(f"\nStarting git-summarize with model: {model}")
+    client = setup_openai(model)
     diff_text = get_git_diff()
     
     if diff_text:
-        commit_message = summarize_with_openai(client, diff_text, model=args.model)
+        commit_message = summarize_with_openai(client, diff_text, model=model)
         if commit_message:
             print("\nSuggested commit message:")
             print("-" * 40)
@@ -120,4 +113,4 @@ def main():
         print("No changes to summarize.")
 
 if __name__ == "__main__":
-    main()
+    app()
