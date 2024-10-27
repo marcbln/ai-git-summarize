@@ -1,4 +1,25 @@
 import subprocess
+from typing import Tuple
+
+def check_unstaged_changes() -> Tuple[bool, str]:
+    """Check if there are any unstaged changes."""
+    try:
+        result = subprocess.run(['git', 'diff'], 
+                              capture_output=True, text=True, check=True)
+        return bool(result.stdout), result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Failed to check unstaged changes. Command output: {e.stderr}")
+        return False, ""
+
+def stage_all_changes() -> bool:
+    """Stage all changes."""
+    try:
+        subprocess.run(['git', 'add', '-A'], check=True)
+        print("Successfully staged all changes")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Failed to stage changes. Command output: {e.stderr}")
+        return False
 
 def get_git_diff():
     """Fetch and return the git diff of staged changes."""
