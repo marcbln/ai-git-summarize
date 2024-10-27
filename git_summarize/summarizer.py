@@ -1,8 +1,14 @@
 import json
+from typing import Optional
 from openai import OpenAI
 from .prompt_builder import PromptBuilder
 
-def summarize_with_openai(client: OpenAI, diff_text: str, model: str = "gpt-3.5-turbo", short: bool = False) -> str | None:
+def summarize_with_openai(
+    client: OpenAI,
+    diff_text: str,
+    model: str = "gpt-3.5-turbo",
+    short: bool = False
+) -> Optional[str]:
     """Generate a commit message summary using OpenAI."""
     print(f"\nGenerating summary using model: {model}")
     try:

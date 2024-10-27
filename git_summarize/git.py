@@ -1,5 +1,5 @@
 import subprocess
-from typing import Tuple
+from typing import Tuple, Optional
 
 def check_unstaged_changes() -> Tuple[bool, str]:
     """Check if there are any unstaged changes."""
@@ -21,7 +21,7 @@ def stage_all_changes() -> bool:
         print(f"Error: Failed to stage changes. Command output: {e.stderr}")
         return False
 
-def get_git_diff():
+def get_git_diff() -> Optional[str]:
     """Fetch and return the git diff of staged changes."""
     print("\nFetching git diff...")
     try:

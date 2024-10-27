@@ -1,6 +1,9 @@
+from typing import List, Dict, Union
+
 class PromptBuilder:
+    MessageType = List[Dict[str, str]]
     @staticmethod
-    def build_diff_prompt(diff_text: str) -> list[dict]:
+    def build_diff_prompt(diff_text: str) -> "PromptBuilder.MessageType":
         """Build prompt for summarizing git diffs."""
         return [
             {
@@ -21,7 +24,7 @@ class PromptBuilder:
         ]
 
     @staticmethod
-    def build_short_diff_prompt(diff_text: str) -> list[dict]:
+    def build_short_diff_prompt(diff_text: str) -> "PromptBuilder.MessageType":
         """Build prompt for summarizing git diffs with single-line output."""
         return [
             {

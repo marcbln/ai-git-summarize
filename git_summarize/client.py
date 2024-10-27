@@ -3,7 +3,7 @@ import sys
 import json
 from openai import OpenAI
 
-def setup_openai(model: str):
+def setup_openai(model: str) -> OpenAI:
     """Setup and return an OpenAI client based on the model type."""
     print(f"\nSetting up client for model: {model}")
     if model.startswith("openrouter/"):
