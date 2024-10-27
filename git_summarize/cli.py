@@ -30,7 +30,9 @@ def summarize_with_openai(client, diff_text, model="gpt-3.5-turbo"):
                 {"role": "system", 
                  "content": "You are a helpful assistant that summarizes git "
                            "diffs and generates concise, informative commit "
-                           "messages."},
+                           "messages. The response should be in the format of "
+                           "a concise single line summary, followed by a more "
+                           "detailed explanation of the changes."},
                 {"role": "user", 
                  "content": f"Please summarize the following git diff and "
                            f"generate a concise commit message:\n\n{diff_text}"}
