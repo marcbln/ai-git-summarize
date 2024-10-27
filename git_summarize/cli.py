@@ -88,7 +88,7 @@ def main():
     )
     parser.add_argument(
         '--model', 
-        default='gpt-3.5-turbo',
+        default='openrouter/qwen/qwen-2.5-72b-instruct',
         help='Model to use (default: gpt-3.5-turbo, for OpenRouter prefix with "openrouter/")'
     )
     args = parser.parse_args()
