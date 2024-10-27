@@ -45,10 +45,11 @@ def get_git_diff():
         print("Ensure you're in a git repository and have staged changes.")
         return None
 
-def summarize_with_openai(client, diff_text, model="gpt-3.5-turbo"):
+def summarize_with_openai(client, diff_text, model="gpt-3.5-turbo", short=False):
     print(f"\nGenerating summary using model: {model}")
     try:
-        messages = PromptBuilder.build_diff_prompt(diff_text)
+        messages = (PromptBuilder.build_short_diff_prompt(diff_text) if short 
+                   else PromptBuilder.build_diff_prompt(diff_text))
         print(f"Generated prompt with {len(messages)} messages")
         
         # Add OpenRouter specific headers if using OpenRouter
@@ -85,13 +86,16 @@ def summarize_with_openai(client, diff_text, model="gpt-3.5-turbo"):
         return None
 
 @app.command()
-def main(model: str = typer.Option("openrouter/qwen/qwen-2.5-72b-instruct", help="Model to use (default: gpt-3.5-turbo, for OpenRouter prefix with 'openrouter/')")):
+def main(
+    model: str = typer.Option("openrouter/qwen/qwen-2.5-72b-instruct", help="Model to use (default: gpt-3.5-turbo, for OpenRouter prefix with 'openrouter/')"),
+    short: bool = typer.Option(False, "--short", "-s", help="Generate single-line commit message only")
+):
     print(f"\nStarting git-summarize with model: {model}")
     client = setup_openai(model)
     diff_text = get_git_diff()
     
     if diff_text:
-        commit_message = summarize_with_openai(client, diff_text, model=model)
+        commit_message = summarize_with_openai(client, diff_text, model=model, short=short)
         if commit_message:
             print("\nSuggested commit message:")
             print("-" * 40)
