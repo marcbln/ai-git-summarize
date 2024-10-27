@@ -6,19 +6,19 @@ class PromptBuilder:
             {
                 "role": "system",
                 "content": "You are a helpful assistant that summarizes git "
-                          "diffs and generates concise, informative commit "
-                          "messages. A commit message should consist "
-                          "of a concise single line summary, followed by a more "
-                          "detailed explanation of the changes. Use bullet points "
-                          "if appropriate. Do not use markdown for formatting."
+                           "diffs and generates concise, informative commit "
+                           "messages. A commit message should consist "
+                           "of a concise single line summary, followed by a more "
+                           "detailed explanation of the changes. Use bullet points "
+                           "if appropriate. Do not use markdown for formatting. "
+                           "Output the commit message directly without any labels or prefixes like 'Commit Message:'."
             },
             {
                 "role": "user",
                 "content": f"Please summarize the following git diff and "
-                          f"generate a concise commit message:\n\n{diff_text}"
+                           f"generate a commit message in standard git format:\n\n{diff_text}"
             }
         ]
-
 #     @staticmethod
 #     def build_commits_prompt(commits: str) -> list[dict]:
 #         """Build prompt for summarizing commit messages."""
