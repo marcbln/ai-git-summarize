@@ -14,7 +14,7 @@ class PromptBuilder:
                            "of a concise single line summary, followed by a more "
                            "detailed explanation of the changes. Use bullet points "
                            "if appropriate. Do not use markdown for formatting. "
-                           "Output the commit message directly without any labels or prefixes like 'Commit Message:'."
+                           "Output only the commit message, without any labels or explanations."
             },
             {
                 "role": "user",
