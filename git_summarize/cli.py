@@ -1,7 +1,10 @@
 # git_summarize/cli.py
+import os
 import sys
 
 import typer
+from .models import get_supported_models
+
 
 from .ai_client import setup_openai
 from .ai_summarizer import summarize_with_openai
@@ -11,7 +14,6 @@ app = typer.Typer()
 
 def print_models(refresh: bool = False) -> None:
     """Print the list of supported models and exit."""
-    from .models import get_supported_models
     models = get_supported_models(refresh)
     print("\nSupported models:")
     for model in models:
@@ -24,12 +26,20 @@ def main(
     short: bool = typer.Option(False, "--short", "-s", help="Generate single-line commit message only"),
     stage_all: bool = typer.Option(False, "--stage-all", "-a", help="Automatically stage all unstaged changes"),
     list_models: bool = typer.Option(False, "--list-models", help="List all supported models and exit"),
-    refresh_openrouter_models: bool = typer.Option(False, "--refresh-openrouter-models", help="Refresh the cached OpenRouter models list")
+    refresh_openrouter_models: bool = typer.Option(False, "--refresh-openrouter-models", help="Refresh the cached OpenRouter models list and exit")
 ) -> None:
     """Main CLI command to summarize git changes and create commits."""
+
     if list_models:
         print_models(refresh_openrouter_models)
-        
+        sys.exit(0)
+
+    if refresh_openrouter_models:
+        print("Refreshing OpenRouter models...")
+        from .openrouter_models import cache_models
+        cache_models([])
+        sys.exit(0)
+
     print(f"\nStarting git-summarize with model: {model}")
     client = setup_openai(model)
     
