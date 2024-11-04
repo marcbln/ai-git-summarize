@@ -33,6 +33,8 @@ def display_models_table(refresh: bool = False) -> None:
         console.print("[yellow]No OpenRouter models available[/yellow]")
         return
 
+    # Convert models to list of tuples for sorting
+    model_rows = []
     for model in openrouter_models:
         if isinstance(model, str):
             # Skip if model is just a string
@@ -41,9 +43,13 @@ def display_models_table(refresh: bool = False) -> None:
             model_id = f"openrouter/{model['id']}"
             name = model.get('name', 'Unknown')
             pricing = format_pricing(model['pricing'])
-            table.add_row(model_id, name, pricing)
+            model_rows.append((model_id, name, pricing))
         except (KeyError, TypeError):
             continue
+    
+    # Sort rows by model ID and add to table
+    for model_id, name, pricing in sorted(model_rows, key=lambda x: x[0].lower()):
+        table.add_row(model_id, name, pricing)
     
     console = Console()
     console.print(table)
@@ -72,13 +78,16 @@ def main(
         if not openrouter_models:
             print("No OpenRouter models available")
             sys.exit(0)
+        model_ids = []
         for model in openrouter_models:
             if isinstance(model, str):
                 continue
             try:
-                print(f"openrouter/{model['id']}")
+                model_ids.append(f"openrouter/{model['id']}")
             except (KeyError, TypeError):
                 continue
+        for model_id in sorted(model_ids, key=str.lower):
+            print(model_id)
         sys.exit(0)
 
     if refresh_openrouter_models:
