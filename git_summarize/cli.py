@@ -4,20 +4,11 @@ import typer
 from openai import OpenAI
 import sys
 
+from .models import SUPPORTED_MODELS
 from .ai_summarizer import summarize_with_openai
 from .git_operations import check_unstaged_changes, stage_all_changes, get_git_diff, commit_changes
 from .ai_client import setup_openai
 
-# List of supported models
-SUPPORTED_MODELS = [
-    "gpt-3.5-turbo",
-    "openrouter/nvidia/llama-3.1-nemotron-70b-instruct",
-    "openrouter/qwen/qwen-2.5-72b-instruct",
-    "openrouter/anthropic/claude-3.5-sonnet",
-    "openrouter/deepseek/deepseek-chat",
-    "openrouter/meta-llama/llama-3-70b-instruct",
-    "openrouter/anthracite-org/magnum-v4-72b"
-]
 
 app = typer.Typer()
 
