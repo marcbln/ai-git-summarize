@@ -5,7 +5,8 @@ version = "0.2.0"
 description = "Generate commit messages using LLM"
 dependencies = [
     "openai>=1.0.0",
-    "typer>=0.6.1"
+    "typer>=0.6.1",
+    "requests",
 ]
 
 [project.scripts]
