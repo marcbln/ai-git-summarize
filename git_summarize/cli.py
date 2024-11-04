@@ -3,6 +3,8 @@ import os
 import sys
 
 import typer
+
+from git_summarize.openrouter_models import get_openrouter_models
 from .models import get_supported_models
 
 
@@ -37,7 +39,7 @@ def main(
     if refresh_openrouter_models:
         print("Refreshing OpenRouter models...")
         from .openrouter_models import cache_models
-        cache_models([])
+        openrouter_models = get_openrouter_models(True)
         sys.exit(0)
 
     print(f"\nStarting git-summarize with model: {model}")
