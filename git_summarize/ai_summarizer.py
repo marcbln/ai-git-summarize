@@ -1,7 +1,7 @@
 import json
 from typing import Optional
 from openai import OpenAI
-from .prompt_builder import PromptBuilder
+from .prompts import PromptBuilder
 
 def summarize_with_openai(
     client: OpenAI,
