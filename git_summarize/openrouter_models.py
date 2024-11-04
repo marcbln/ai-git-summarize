@@ -2,7 +2,9 @@ import os
 import sys
 import json
 import requests
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+
+ModelData = Dict[str, Any]
 from pathlib import Path
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -10,7 +12,7 @@ from rich import print as rprint
 
 CACHE_FILE = Path.home() / ".cache" / "git-summarize" / "openrouter_models.json"
 
-def fetch_openrouter_models() -> List[str]:
+def fetch_openrouter_models() -> List[ModelData]:
     """Fetch available models from OpenRouter API."""
     console = Console()
     
@@ -34,14 +36,14 @@ def fetch_openrouter_models() -> List[str]:
             response = requests.get("https://openrouter.ai/api/v1/models", headers=headers)
             response.raise_for_status()
             models = response.json()
-            model_list = [f"openrouter/{model['id']}" for model in models['data']]
+            model_list = models['data']
             console.print(f"[green]Successfully fetched {len(model_list)} models[/green]")
             return model_list
         except Exception as e:
             console.print(f"[red]Error fetching models: {e}[/red]")
             return []
 
-def cache_models(models: List[str]) -> None:
+def cache_models(models: List[ModelData]) -> None:
     """Cache the fetched models locally."""
     console = Console()
     CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -49,17 +51,25 @@ def cache_models(models: List[str]) -> None:
         json.dump(models, f)
     console.print(f"[blue]Cached {len(models)} models to {CACHE_FILE}[/blue]")
 
-def load_cached_models() -> Optional[List[str]]:
+def load_cached_models() -> Optional[List[ModelData]]:
     """Load models from cache if available."""
     console = Console()
     if CACHE_FILE.exists():
-        with open(CACHE_FILE) as f:
-            models = json.load(f)
-            console.print(f"[blue]Loaded {len(models)} models from cache[/blue]")
-            return models
+        try:
+            with open(CACHE_FILE) as f:
+                models = json.load(f)
+                if isinstance(models, list) and all(isinstance(m, dict) for m in models):
+                    console.print(f"[blue]Loaded {len(models)} models from cache[/blue]")
+                    return models
+                else:
+                    console.print("[yellow]Invalid cache format, refreshing...[/yellow]")
+                    return None
+        except json.JSONDecodeError:
+            console.print("[yellow]Invalid cache file, refreshing...[/yellow]")
+            return None
     return None
 
-def get_openrouter_models(refresh: bool = False) -> List[str]:
+def get_openrouter_models(refresh: bool = False) -> List[ModelData]:
     """Get OpenRouter models, either from cache or by fetching."""
     if not refresh:
         cached_models = load_cached_models()
@@ -70,3 +80,9 @@ def get_openrouter_models(refresh: bool = False) -> List[str]:
     if models:
         cache_models(models)
     return models
+
+def format_pricing(pricing: Dict[str, str]) -> str:
+    """Format pricing information for display."""
+    prompt_price = float(pricing.get('prompt', '0'))
+    completion_price = float(pricing.get('completion', '0'))
+    return f"${prompt_price:.6f}/1K tokens (prompt), ${completion_price:.6f}/1K tokens (completion)"

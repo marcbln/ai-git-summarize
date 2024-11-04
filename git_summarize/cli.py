@@ -4,8 +4,9 @@ import sys
 
 import typer
 
-from git_summarize.openrouter_models import get_openrouter_models
-from .models import get_supported_models
+from rich.console import Console
+from rich.table import Table
+from git_summarize.openrouter_models import get_openrouter_models, format_pricing
 
 
 from .ai_client import setup_openai
@@ -16,10 +17,31 @@ app = typer.Typer()
 
 def print_models(refresh: bool = False) -> None:
     """Print the list of supported models and exit."""
-    models = get_supported_models(refresh)
-    print("\nSupported models:")
-    for model in models:
-        print(f"- {model}")
+    console = Console()
+    table = Table(title="Available Models with Pricing")
+    table.add_column("Model ID")
+    table.add_column("Name")
+    table.add_column("Pricing")
+
+    openrouter_models = get_openrouter_models(refresh)
+    if not openrouter_models:
+        console.print("[yellow]No OpenRouter models available[/yellow]")
+        return
+
+    for model in openrouter_models:
+        if isinstance(model, str):
+            # Skip if model is just a string
+            continue
+        try:
+            model_id = f"openrouter/{model['id']}"
+            name = model.get('name', 'Unknown')
+            pricing = format_pricing(model['pricing'])
+            table.add_row(model_id, name, pricing)
+        except (KeyError, TypeError):
+            continue
+    
+    console = Console()
+    console.print(table)
     sys.exit(0)
 
 @app.command()
