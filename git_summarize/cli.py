@@ -16,7 +16,12 @@ from .git_operations import check_unstaged_changes, stage_all_changes, get_git_d
 app = typer.Typer()
 
 def display_models_table(refresh: bool = False) -> None:
-    """Print a detailed table of supported models and exit."""
+    """Print a detailed table of supported models with their pricing information.
+    
+    Args:
+        refresh (bool): If True, force refresh of cached model data before displaying.
+                       Default is False.
+    """
     console = Console()
     table = Table(title="Available Models with Pricing")
     table.add_column("Model ID")
@@ -46,7 +51,10 @@ def display_models_table(refresh: bool = False) -> None:
 
 @app.command()
 def main(
-    model: str = typer.Option("openrouter/qwen/qwen-2.5-72b-instruct", help="Model to use (default: gpt-3.5-turbo, for OpenRouter prefix with 'openrouter/')"),
+    model: str = typer.Option(
+        "openrouter/qwen/qwen-2.5-72b-instruct", 
+        help="Model ID to use for generating commit messages. For OpenRouter models, prefix with 'openrouter/'. Use --list-models to see available options."
+    ),
     short: bool = typer.Option(False, "--short", "-s", help="Generate single-line commit message only"),
     stage_all: bool = typer.Option(False, "--stage-all", "-a", help="Automatically stage all unstaged changes"),
     print_models_table: bool = typer.Option(False, "--print-models-table", help="Print detailed table of all supported models and exit"),

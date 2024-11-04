@@ -2,7 +2,7 @@
 [project]
 name = "git-summarize"
 version = "0.2.0"
-description = "Generate commit messages using LLM"
+description = "Generate Git commit messages using Large Language Models (LLM) like GPT and Qwen through OpenRouter"
 dependencies = [
     "openai>=1.0.0",
     "typer>=0.6.1",
