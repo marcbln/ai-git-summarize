@@ -1,14 +1,12 @@
 # git_summarize/cli.py
-from typing import Optional, List
-import typer
-from openai import OpenAI
 import sys
-
 from .models import SUPPORTED_MODELS
+
+import typer
+
+from .ai_client import setup_openai
 from .ai_summarizer import summarize_with_openai
 from .git_operations import check_unstaged_changes, stage_all_changes, get_git_diff, commit_changes
-from .ai_client import setup_openai
-
 
 app = typer.Typer()
 
