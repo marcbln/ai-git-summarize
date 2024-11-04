@@ -15,8 +15,8 @@ from .git_operations import check_unstaged_changes, stage_all_changes, get_git_d
 
 app = typer.Typer()
 
-def print_models(refresh: bool = False) -> None:
-    """Print the list of supported models and exit."""
+def display_models_table(refresh: bool = False) -> None:
+    """Print a detailed table of supported models and exit."""
     console = Console()
     table = Table(title="Available Models with Pricing")
     table.add_column("Model ID")
@@ -49,13 +49,28 @@ def main(
     model: str = typer.Option("openrouter/qwen/qwen-2.5-72b-instruct", help="Model to use (default: gpt-3.5-turbo, for OpenRouter prefix with 'openrouter/')"),
     short: bool = typer.Option(False, "--short", "-s", help="Generate single-line commit message only"),
     stage_all: bool = typer.Option(False, "--stage-all", "-a", help="Automatically stage all unstaged changes"),
-    list_models: bool = typer.Option(False, "--list-models", help="List all supported models and exit"),
+    print_models_table: bool = typer.Option(False, "--print-models-table", help="Print detailed table of all supported models and exit"),
+    list_models: bool = typer.Option(False, "--list-models", help="List model IDs only and exit"),
     refresh_openrouter_models: bool = typer.Option(False, "--refresh-openrouter-models", help="Refresh the cached OpenRouter models list and exit")
 ) -> None:
     """Main CLI command to summarize git changes and create commits."""
 
+    if print_models_table:
+        display_models_table(refresh_openrouter_models)
+        sys.exit(0)
+
     if list_models:
-        print_models(refresh_openrouter_models)
+        openrouter_models = get_openrouter_models(refresh_openrouter_models)
+        if not openrouter_models:
+            print("No OpenRouter models available")
+            sys.exit(0)
+        for model in openrouter_models:
+            if isinstance(model, str):
+                continue
+            try:
+                print(f"openrouter/{model['id']}")
+            except (KeyError, TypeError):
+                continue
         sys.exit(0)
 
     if refresh_openrouter_models:
