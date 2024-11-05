@@ -24,9 +24,10 @@ def display_models_table(refresh: bool = False) -> None:
     """
     console = Console()
     table = Table(title="Available Models with Pricing")
-    table.add_column("Model ID")
-    table.add_column("Name")
-    table.add_column("Pricing")
+    table.add_column("Model ID", no_wrap=True)
+    table.add_column("Context", no_wrap=True)
+    table.add_column("Input", no_wrap=True)
+    table.add_column("Output", no_wrap=True)
 
     openrouter_models = get_openrouter_models(refresh)
     if not openrouter_models:
@@ -41,15 +42,14 @@ def display_models_table(refresh: bool = False) -> None:
             continue
         try:
             model_id = f"openrouter/{model['id']}"
-            name = model.get('name', 'Unknown')
-            pricing = format_pricing(model['pricing'])
-            model_rows.append((model_id, name, pricing))
+            context, input_price, output_price = format_pricing(model)
+            model_rows.append((model_id, context, input_price, output_price))
         except (KeyError, TypeError):
             continue
     
     # Sort rows by model ID and add to table
-    for model_id, name, pricing in sorted(model_rows, key=lambda x: x[0].lower()):
-        table.add_row(model_id, name, pricing)
+    for model_id, context, input_price, output_price in sorted(model_rows, key=lambda x: x[0].lower()):
+        table.add_row(model_id, context, input_price, output_price)
     
     console = Console()
     console.print(table)

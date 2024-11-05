@@ -81,8 +81,34 @@ def get_openrouter_models(refresh: bool = False) -> List[ModelData]:
         cache_models(models)
     return models
 
-def format_pricing(pricing: Dict[str, str]) -> str:
-    """Format pricing information for display."""
+def format_pricing(model_data: Dict[str, Any]) -> tuple[str, str, str]:
+    """Format pricing information for display.
+    
+    Args:
+        model_data: Complete model data dictionary from OpenRouter API
+    
+    Returns:
+        tuple: (context_length, input_price, output_price)
+    """
+    pricing = model_data.get('pricing', {})
     prompt_price = float(pricing.get('prompt', '0'))
     completion_price = float(pricing.get('completion', '0'))
-    return f"${prompt_price:.6f}/1K tokens (prompt), ${completion_price:.6f}/1K tokens (completion)"
+    
+    # Get context length and format it
+    context_length = model_data.get('context_length', 0)
+    if context_length >= 1000000:
+        context_str = f"{context_length//1000000}M"
+    elif context_length >= 1000:
+        context_str = f"{context_length//1000}K"
+    else:
+        context_str = str(context_length)
+
+    # Convert to per million tokens and format prices
+    prompt_price_m = prompt_price * 1_000_000  # Convert to per million
+    completion_price_m = completion_price * 1_000_000  # Convert to per million
+    
+    return (
+        context_str,
+        f"${prompt_price_m:.2f}/M",
+        f"${completion_price_m:.2f}/M"
+    )
