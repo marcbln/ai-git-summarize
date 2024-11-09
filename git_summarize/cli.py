@@ -65,7 +65,8 @@ def main(
     stage_all: bool = typer.Option(False, "--stage-all", "-a", help="Automatically stage all unstaged changes"),
     print_models_table: bool = typer.Option(False, "--print-models-table", help="Print detailed table of all supported models and exit"),
     list_models: bool = typer.Option(False, "--list-models", help="List model IDs only and exit"),
-    refresh_openrouter_models: bool = typer.Option(False, "--refresh-openrouter-models", help="Refresh the cached OpenRouter models list and exit")
+    refresh_openrouter_models: bool = typer.Option(False, "--refresh-openrouter-models", help="Refresh the cached OpenRouter models list and exit"),
+    push: bool = typer.Option(False, "--push", "-p", help="Automatically push changes after commit without asking for confirmation")
 ) -> None:
     """Main CLI command to summarize git changes and create commits."""
 
@@ -123,9 +124,12 @@ def main(
             response = input("\nUse this message for commit? [y/N]: ").lower()
             if response == 'y':
                 if commit_changes(commit_message):
-                    push_response = input("\nWould you like to push these changes? [y/N]: ").lower()
-                    if push_response == 'y':
+                    if push:
                         push_changes()
+                    else:
+                        push_response = input("\nWould you like to push these changes? [y/N]: ").lower()
+                        if push_response == 'y':
+                            push_changes()
         else:
             print("Failed to generate commit message using API.")
     else:
