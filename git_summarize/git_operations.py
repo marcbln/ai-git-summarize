@@ -48,3 +48,14 @@ def commit_changes(message: str) -> bool:
     except subprocess.CalledProcessError as e:
         print(f"Error: Failed to commit changes. Command output: {e.stderr}")
         return False
+
+def push_changes() -> bool:
+    """Push committed changes to remote repository."""
+    try:
+        print("\nPushing changes...")
+        subprocess.run(['git', 'push'], check=True)
+        print("Changes pushed successfully!")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Failed to push changes. Command output: {e.stderr}")
+        return False

@@ -11,7 +11,7 @@ from git_summarize.openrouter_models import get_openrouter_models, format_pricin
 
 from .ai_client import setup_openai
 from .ai_summarizer import summarize_with_openai
-from .git_operations import check_unstaged_changes, stage_all_changes, get_git_diff, commit_changes
+from .git_operations import check_unstaged_changes, stage_all_changes, get_git_diff, commit_changes, push_changes
 
 app = typer.Typer()
 
@@ -122,7 +122,10 @@ def main(
             
             response = input("\nUse this message for commit? [y/N]: ").lower()
             if response == 'y':
-                commit_changes(commit_message)
+                if commit_changes(commit_message):
+                    push_response = input("\nWould you like to push these changes? [y/N]: ").lower()
+                    if push_response == 'y':
+                        push_changes()
         else:
             print("Failed to generate commit message using API.")
     else:
