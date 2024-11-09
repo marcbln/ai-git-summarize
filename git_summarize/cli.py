@@ -3,9 +3,11 @@ import os
 import sys
 
 import typer
-
+from rich import print as rprint
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table
+from rich.style import Style
 from git_summarize.openrouter_models import get_openrouter_models, format_pricing
 
 
@@ -98,14 +100,16 @@ def main(
         openrouter_models = get_openrouter_models(True)
         sys.exit(0)
 
-    print(f"\nStarting git-summarize with model: {model}")
+    console = Console()
+    console.print(Panel(f"Starting git-summarize with model: [cyan]{model}[/cyan]", 
+                       style="bold green"))
     client = setup_openai(model)
     ai_summarizer = AISummarizer(client)
     
     # Check for unstaged changes
     has_unstaged, unstaged_diff = check_unstaged_changes()
     if has_unstaged:
-        print("\nFound unstaged changes!")
+        console.print("\n[yellow]Found unstaged changes![/yellow]")
         if stage_all:
             stage_all_changes()
         else:
@@ -119,18 +123,14 @@ def main(
 
         if feedback:
             feedback_text = ai_summarizer.generate_code_feedback(diff_text, model)
-            print("\nCode Quality Feedback:")
-            print("-" * 40)
-            print(feedback_text)
-            print("-" * 40)
+            console.print("\n[bold]Code Quality Feedback:[/bold]")
+            console.print(Panel(feedback_text, border_style="blue"))
 
 
         commit_message = ai_summarizer.summarize_changes(diff_text, model=model, short=short)
         if commit_message:
-            print("\nSuggested commit message:")
-            print("-" * 40)
-            print(commit_message)
-            print("-" * 40)
+            console.print("\n[bold]Suggested commit message:[/bold]")
+            console.print(Panel(commit_message, border_style="green"))
 
             response = input("\nUse this message for commit? [y/N]: ").lower()
             if response == 'y':
@@ -142,9 +142,9 @@ def main(
                         if push_response == 'y':
                             push_changes()
         else:
-            print("Failed to generate commit message using API.")
+            console.print("[red]Failed to generate commit message using API.[/red]")
     else:
-        print("No changes to summarize.")
+        console.print("[yellow]No changes to summarize.[/yellow]")
 
 if __name__ == "__main__":
     app()
