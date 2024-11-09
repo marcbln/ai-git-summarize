@@ -10,7 +10,7 @@ from git_summarize.openrouter_models import get_openrouter_models, format_pricin
 
 
 from .ai_client import setup_openai
-from .ai_summarizer import summarize_with_openai, generate_code_feedback
+from .ai_summarizer import AISummarizer
 from .git_operations import check_unstaged_changes, stage_all_changes, get_git_diff, commit_changes, push_changes
 
 app = typer.Typer()
@@ -100,6 +100,7 @@ def main(
 
     print(f"\nStarting git-summarize with model: {model}")
     client = setup_openai(model)
+    summarizer = AISummarizer(client)
     
     # Check for unstaged changes
     has_unstaged, unstaged_diff = check_unstaged_changes()
@@ -117,14 +118,14 @@ def main(
     if diff_text:
 
         if feedback:
-            feedback_text = generate_code_feedback(client, diff_text, model=model)
+            feedback_text = summarizer.generate_code_feedback(diff_text, model)
             print("\nCode Quality Feedback:")
             print("-" * 40)
             print(feedback_text)
             print("-" * 40)
 
 
-        commit_message = summarize_with_openai(client, diff_text, model=model, short=short)
+        commit_message = summarizer.summarize_changes(diff_text, model=model, short=short)
         if commit_message:
             print("\nSuggested commit message:")
             print("-" * 40)
