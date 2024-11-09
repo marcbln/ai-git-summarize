@@ -10,7 +10,7 @@ from git_summarize.openrouter_models import get_openrouter_models, format_pricin
 
 
 from .ai_client import setup_openai
-from .ai_summarizer import summarize_with_openai
+from .ai_summarizer import summarize_with_openai, generate_code_feedback
 from .git_operations import check_unstaged_changes, stage_all_changes, get_git_diff, commit_changes, push_changes
 
 app = typer.Typer()
@@ -115,23 +115,22 @@ def main(
     diff_text = get_git_diff()
     
     if diff_text:
-        result = summarize_with_openai(client, diff_text, model=model, short=short, feedback=feedback)
-        if result:
-            if feedback:
-                commit_message, feedback_text = result
-            else:
-                commit_message = result
+
+        if feedback:
+            feedback_text = generate_code_feedback(client, diff_text, model=model)
+            print("\nCode Quality Feedback:")
+            print("-" * 40)
+            print(feedback_text)
+            print("-" * 40)
+
+
+        commit_message = summarize_with_openai(client, diff_text, model=model, short=short)
+        if commit_message:
             print("\nSuggested commit message:")
             print("-" * 40)
             print(commit_message)
             print("-" * 40)
-            
-            if feedback:
-                print("\nCode Quality Feedback:")
-                print("-" * 40)
-                print(feedback_text)
-                print("-" * 40)
-            
+
             response = input("\nUse this message for commit? [y/N]: ").lower()
             if response == 'y':
                 if commit_changes(commit_message):

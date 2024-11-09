@@ -3,13 +3,44 @@ from typing import Optional
 from openai import OpenAI
 from .prompts import PromptBuilder
 
+
+def generate_code_feedback(
+        client: OpenAI,
+        diff_text: str,
+        model: str
+) -> Optional[str]:
+    """Generate code quality feedback using AI.
+    
+    Args:
+        client: OpenAI client instance
+        diff_text: Git diff text to analyze
+        model: Name of the model to use
+        
+    Returns:
+        str: Generated feedback if successful
+        None: If API call fails
+    """
+    try:
+        messages = PromptBuilder.build_feedback_prompt(diff_text)
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=300
+        )
+        if response and response.choices:
+            return response.choices[0].message.content.strip()
+        return None
+    except Exception as e:
+        print(f"\nError generating feedback: {type(e).__name__} - {str(e)}")
+        return None
+
+
 def summarize_with_openai(
-    client: OpenAI,
-    diff_text: str,
-    model: str = "gpt-3.5-turbo",
-    short: bool = False,
-    feedback: bool = False
-) -> Optional[str | tuple[str, str]]:
+        client: OpenAI,
+        diff_text: str,
+        model: str = "gpt-3.5-turbo",
+        short: bool = False
+) -> Optional[str]:
     """Generate a commit message summary using OpenAI.
     
     Args:
@@ -32,10 +63,10 @@ def summarize_with_openai(
     """
     print(f"\nGenerating summary using model: {model}")
     try:
-        messages = (PromptBuilder.build_short_diff_prompt(diff_text) if short 
-                   else PromptBuilder.build_diff_prompt(diff_text))
+        messages = (PromptBuilder.build_short_diff_prompt(diff_text) if short
+                    else PromptBuilder.build_diff_prompt(diff_text))
         print(f"Generated prompt with {len(messages)} messages")
-        
+
         # Add OpenRouter specific headers if using OpenRouter
         if model.startswith("openrouter/"):
             # Remove the "openrouter/" prefix for the actual API call
@@ -58,50 +89,36 @@ def summarize_with_openai(
             }
             print("Using OpenAI configuration:")
             print(json.dumps(kwargs, indent=2))
-            
+
         print("\nSending API request...")
         response = client.chat.completions.create(**kwargs)
         print("Successfully received API response")
-        
+
         # Log the full response for debugging
         print(f"\nFull API response: {response}")
-        
+
         # Add defensive checks
         if not response:
             print("Error: Received empty response from API")
             return None
-            
+
         if not hasattr(response, 'choices'):
             print("Error: Response missing 'choices' attribute")
             return None
-            
+
         if not response.choices:
             print("Error: Response contains empty choices list")
             return None
-            
+
         if not hasattr(response.choices[0], 'message'):
             print("Error: First choice missing 'message' attribute")
             return None
-            
+
         if not hasattr(response.choices[0].message, 'content'):
             print("Error: Message missing 'content' attribute")
             return None
-            
-        commit_message = response.choices[0].message.content.strip()
-        
-        if feedback:
-            print("\nGenerating code quality feedback...")
-            messages = PromptBuilder.build_feedback_prompt(diff_text)
-            feedback_response = client.chat.completions.create(
-                model=kwargs["model"],
-                messages=messages,
-                max_tokens=300
-            )
-            if feedback_response and feedback_response.choices:
-                feedback_text = feedback_response.choices[0].message.content.strip()
-                return commit_message, feedback_text
-            
-        return commit_message
+
+        return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"\nError when calling API: {type(e).__name__} - {str(e)}")
         if hasattr(e, 'response'):
