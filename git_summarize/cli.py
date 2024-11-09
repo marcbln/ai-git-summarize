@@ -100,7 +100,7 @@ def main(
 
     print(f"\nStarting git-summarize with model: {model}")
     client = setup_openai(model)
-    summarizer = AISummarizer(client)
+    ai_summarizer = AISummarizer(client)
     
     # Check for unstaged changes
     has_unstaged, unstaged_diff = check_unstaged_changes()
@@ -118,14 +118,14 @@ def main(
     if diff_text:
 
         if feedback:
-            feedback_text = summarizer.generate_code_feedback(diff_text, model)
+            feedback_text = ai_summarizer.generate_code_feedback(diff_text, model)
             print("\nCode Quality Feedback:")
             print("-" * 40)
             print(feedback_text)
             print("-" * 40)
 
 
-        commit_message = summarizer.summarize_changes(diff_text, model=model, short=short)
+        commit_message = ai_summarizer.summarize_changes(diff_text, model=model, short=short)
         if commit_message:
             print("\nSuggested commit message:")
             print("-" * 40)
