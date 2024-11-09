@@ -66,7 +66,8 @@ def main(
     print_models_table: bool = typer.Option(False, "--print-models-table", help="Print detailed table of all supported models and exit"),
     list_models: bool = typer.Option(False, "--list-models", help="List model IDs only and exit"),
     refresh_openrouter_models: bool = typer.Option(False, "--refresh-openrouter-models", help="Refresh the cached OpenRouter models list and exit"),
-    push: bool = typer.Option(False, "--push", "-p", help="Automatically push changes after commit without asking for confirmation")
+    push: bool = typer.Option(False, "--push", "-p", help="Automatically push changes after commit without asking for confirmation"),
+    feedback: bool = typer.Option(False, "--feedback", "-f", help="Provide code quality feedback and suggestions for improvement")
 ) -> None:
     """Main CLI command to summarize git changes and create commits."""
 
@@ -114,12 +115,22 @@ def main(
     diff_text = get_git_diff()
     
     if diff_text:
-        commit_message = summarize_with_openai(client, diff_text, model=model, short=short)
-        if commit_message:
+        result = summarize_with_openai(client, diff_text, model=model, short=short, feedback=feedback)
+        if result:
+            if feedback:
+                commit_message, feedback_text = result
+            else:
+                commit_message = result
             print("\nSuggested commit message:")
             print("-" * 40)
             print(commit_message)
             print("-" * 40)
+            
+            if feedback:
+                print("\nCode Quality Feedback:")
+                print("-" * 40)
+                print(feedback_text)
+                print("-" * 40)
             
             response = input("\nUse this message for commit? [y/N]: ").lower()
             if response == 'y':

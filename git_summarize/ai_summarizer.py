@@ -7,8 +7,9 @@ def summarize_with_openai(
     client: OpenAI,
     diff_text: str,
     model: str = "gpt-3.5-turbo",
-    short: bool = False
-) -> Optional[str]:
+    short: bool = False,
+    feedback: bool = False
+) -> Optional[str | tuple[str, str]]:
     """Generate a commit message summary using OpenAI.
     
     Args:
@@ -86,7 +87,21 @@ def summarize_with_openai(
             print("Error: Message missing 'content' attribute")
             return None
             
-        return response.choices[0].message.content.strip()
+        commit_message = response.choices[0].message.content.strip()
+        
+        if feedback:
+            print("\nGenerating code quality feedback...")
+            messages = PromptBuilder.build_feedback_prompt(diff_text)
+            feedback_response = client.chat.completions.create(
+                model=kwargs["model"],
+                messages=messages,
+                max_tokens=300
+            )
+            if feedback_response and feedback_response.choices:
+                feedback_text = feedback_response.choices[0].message.content.strip()
+                return commit_message, feedback_text
+            
+        return commit_message
     except Exception as e:
         print(f"\nError when calling API: {type(e).__name__} - {str(e)}")
         if hasattr(e, 'response'):
