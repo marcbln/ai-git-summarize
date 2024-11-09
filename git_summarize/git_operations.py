@@ -1,5 +1,5 @@
 import subprocess
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 def check_unstaged_changes() -> Tuple[bool, str]:
     """Check if there are any unstaged changes."""
@@ -38,13 +38,49 @@ def get_git_diff() -> Optional[str]:
         print("Ensure you're in a git repository and have staged changes.")
         return None
 
+def get_configured_remotes() -> List[str]:
+    """Get list of configured git remotes."""
+    try:
+        result = subprocess.run(['git', 'remote'], 
+                              capture_output=True, text=True, check=True)
+        return result.stdout.strip().split('\n') if result.stdout.strip() else []
+    except subprocess.CalledProcessError:
+        return []
+
 def commit_changes(message: str) -> bool:
     """Commit changes with the given message."""
     try:
         print("\nCommitting changes...")
-        subprocess.run(['git', 'commit', '-m', message], check=True)
+        result = subprocess.run(['git', 'commit', '-m', message], 
+                              capture_output=True, text=True, check=True)
         print("Changes committed successfully!")
         return True
     except subprocess.CalledProcessError as e:
         print(f"Error: Failed to commit changes. Command output: {e.stderr}")
+        return False
+
+def push_changes(remote: str = "origin", branch: str = "") -> bool:
+    """Push changes to remote repository."""
+    try:
+        print("\nPushing changes...")
+        remotes = get_configured_remotes()
+        if not remotes:
+            print("Error: No configured remote repositories found.")
+            print("Add a remote repository using: git remote add <name> <url>")
+            return False
+            
+        if remote not in remotes:
+            print(f"Warning: Remote '{remote}' not found. Available remotes: {', '.join(remotes)}")
+            remote = remotes[0]
+            print(f"Using '{remote}' instead.")
+
+        cmd = ['git', 'push', remote]
+        if branch:
+            cmd.append(branch)
+            
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        print("Changes pushed successfully!")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Failed to push changes. Command output: {e.stderr}")
         return False
