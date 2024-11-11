@@ -3,15 +3,17 @@ import os
 import sys
 
 import typer
-
+from rich import print as rprint
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table
+from rich.style import Style
 from git_summarize.openrouter_models import get_openrouter_models, format_pricing
 
 
 from .ai_client import setup_openai
-from .ai_summarizer import summarize_with_openai
-from .git_operations import check_unstaged_changes, stage_all_changes, get_git_diff, commit_changes
+from .ai_summarizer import AISummarizer
+from .git_operations import check_unstaged_changes, stage_all_changes, get_git_diff, commit_changes, push_changes
 
 app = typer.Typer()
 
@@ -65,7 +67,9 @@ def main(
     stage_all: bool = typer.Option(False, "--stage-all", "-a", help="Automatically stage all unstaged changes"),
     print_models_table: bool = typer.Option(False, "--print-models-table", help="Print detailed table of all supported models and exit"),
     list_models: bool = typer.Option(False, "--list-models", help="List model IDs only and exit"),
-    refresh_openrouter_models: bool = typer.Option(False, "--refresh-openrouter-models", help="Refresh the cached OpenRouter models list and exit")
+    refresh_openrouter_models: bool = typer.Option(False, "--refresh-openrouter-models", help="Refresh the cached OpenRouter models list and exit"),
+    push: bool = typer.Option(False, "--push", "-p", help="Automatically push changes after commit without asking for confirmation"),
+    feedback: bool = typer.Option(False, "--feedback", "-f", help="Provide code quality feedback and suggestions for improvement")
 ) -> None:
     """Main CLI command to summarize git changes and create commits."""
 
@@ -96,13 +100,16 @@ def main(
         openrouter_models = get_openrouter_models(True)
         sys.exit(0)
 
-    print(f"\nStarting git-summarize with model: {model}")
+    console = Console()
+    console.print(Panel(f"Starting git-summarize with model: [cyan]{model}[/cyan]", 
+                       style="bold green"))
     client = setup_openai(model)
+    ai_summarizer = AISummarizer(client)
     
     # Check for unstaged changes
     has_unstaged, unstaged_diff = check_unstaged_changes()
     if has_unstaged:
-        print("\nFound unstaged changes!")
+        console.print("\n[yellow]Found unstaged changes![/yellow]")
         if stage_all:
             stage_all_changes()
         else:
@@ -113,20 +120,31 @@ def main(
     diff_text = get_git_diff()
     
     if diff_text:
-        commit_message = summarize_with_openai(client, diff_text, model=model, short=short)
+
+        if feedback:
+            feedback_text = ai_summarizer.generate_code_feedback(diff_text, model)
+            console.print("\n[bold]Code Quality Feedback:[/bold]")
+            console.print(Panel(feedback_text, border_style="blue"))
+
+
+        commit_message = ai_summarizer.summarize_changes(diff_text, model=model, short=short)
         if commit_message:
-            print("\nSuggested commit message:")
-            print("-" * 40)
-            print(commit_message)
-            print("-" * 40)
-            
+            console.print("\n[bold]Suggested commit message:[/bold]")
+            console.print(Panel(commit_message, border_style="green"))
+
             response = input("\nUse this message for commit? [y/N]: ").lower()
             if response == 'y':
-                commit_changes(commit_message)
+                if commit_changes(commit_message):
+                    if push:
+                        push_changes()
+                    else:
+                        push_response = input("\nWould you like to push these changes? [y/N]: ").lower()
+                        if push_response == 'y':
+                            push_changes()
         else:
-            print("Failed to generate commit message using API.")
+            console.print("[red]Failed to generate commit message using API.[/red]")
     else:
-        print("No changes to summarize.")
+        console.print("[yellow]No changes to summarize.[/yellow]")
 
 if __name__ == "__main__":
     app()

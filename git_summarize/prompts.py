@@ -42,6 +42,31 @@ class PromptBuilder:
                            f"single-line commit message:\n\n{diff_text}"
             }
         ]
+
+    @staticmethod
+    def build_feedback_prompt(diff_text: str) -> "PromptBuilder.MessageType":
+        """Build prompt for providing code quality feedback."""
+        return [
+            {
+                "role": "system",
+                "content": "You are a thorough code reviewer focused on code quality and best practices. "
+                           "Analyze the provided git diff and provide constructive feedback on: "
+                           "- Code style and formatting "
+                           "- Potential bugs or edge cases "
+                           "- Performance considerations "
+                           "- Design patterns and architecture "
+                           "- Testing considerations "
+                           "- Documentation completeness "
+                           "Suggest specific improvements where applicable. "
+                           "Be direct but constructive in your feedback."
+            },
+            {
+                "role": "user",
+                "content": f"Please review these code changes and provide feedback "
+                           f"on code quality and potential improvements:\n\n{diff_text}"
+            }
+        ]
+
 #     @staticmethod
 #     def build_commits_prompt(commits: str) -> list[dict]:
 #         """Build prompt for summarizing commit messages."""
