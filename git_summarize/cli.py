@@ -1,7 +1,7 @@
 # git_summarize/cli.py
 import os
 import sys
-
+import inquirer
 import typer
 from rich import print as rprint
 from rich.console import Console
@@ -113,8 +113,14 @@ def main(
         if stage_all:
             stage_all_changes()
         else:
-            response = input("Would you like to stage these changes? [y/N]: ").lower()
-            if response == 'y':
+            questions = [
+                inquirer.Confirm('stage',
+                    message="Would you like to stage these changes?",
+                    default=False
+                ),
+            ]
+            answers = inquirer.prompt(questions)
+            if answers and answers['stage']:
                 stage_all_changes()
     
     diff_text = get_git_diff()
@@ -132,14 +138,26 @@ def main(
             console.print("\n[bold]Suggested commit message:[/bold]")
             console.print(Panel(commit_message, border_style="green"))
 
-            response = input("\nUse this message for commit? [y/N]: ").lower()
-            if response == 'y':
+            questions = [
+                inquirer.Confirm('commit',
+                    message="Use this message for commit?",
+                    default=True
+                ),
+            ]
+            answers = inquirer.prompt(questions)
+            if answers and answers['commit']:
                 if commit_changes(commit_message):
                     if push:
                         push_changes()
                     else:
-                        push_response = input("\nWould you like to push these changes? [y/N]: ").lower()
-                        if push_response == 'y':
+                        questions = [
+                            inquirer.Confirm('push',
+                                message="Would you like to push these changes?",
+                                default=False
+                            ),
+                        ]
+                        push_answers = inquirer.prompt(questions)
+                        if push_answers and push_answers['push']:
                             push_changes()
         else:
             console.print("[red]Failed to generate commit message using API.[/red]")
