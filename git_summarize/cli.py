@@ -111,6 +111,7 @@ def main(
     if has_unstaged:
         console.print("\n[yellow]Found unstaged changes![/yellow]")
         if stage_all:
+            print("Staging all changes...")
             stage_all_changes()
         else:
             questions = [
@@ -122,7 +123,7 @@ def main(
             answers = inquirer.prompt(questions)
             if answers and answers['stage']:
                 stage_all_changes()
-    
+
     diff_text = get_git_diff()
     
     if diff_text:
