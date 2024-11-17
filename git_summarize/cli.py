@@ -60,7 +60,7 @@ def display_models_table(refresh: bool = False) -> None:
 @app.command()
 def main(
     model: str = typer.Option(
-        "openrouter/qwen/qwen-2.5-72b-instruct", 
+        "openrouter/qwen/qwen-2.5-coder-32b-instruct",
         help="Model ID to use for generating commit messages. For OpenRouter models, prefix with 'openrouter/'. Use --list-models to see available options."
     ),
     short: bool = typer.Option(False, "--short", "-s", help="Generate single-line commit message only"),
