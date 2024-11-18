@@ -69,7 +69,10 @@ def main(
     list_models: bool = typer.Option(False, "--list-models", help="List model IDs only and exit"),
     refresh_openrouter_models: bool = typer.Option(False, "--refresh-openrouter-models", help="Refresh the cached OpenRouter models list and exit"),
     push: bool = typer.Option(False, "--push", "-p", help="Automatically push changes after commit without asking for confirmation"),
-    feedback: bool = typer.Option(False, "--feedback", "-f", help="Provide code quality feedback and suggestions for improvement")
+    feedback: bool = typer.Option(False, "--feedback", "-f", help="Provide code quality feedback and suggestions for improvement"),
+    always_accept_commit_message: bool = typer.Option(False, "--always-accept-commit-message", "-y",
+                                                      help="Skip confirmation prompt and accept suggested commit message"),
+
 ) -> None:
     """Main CLI command to summarize git changes and create commits."""
 
@@ -139,14 +142,19 @@ def main(
             console.print("\n[bold]Suggested commit message:[/bold]")
             console.print(Panel(commit_message, border_style="green"))
 
-            questions = [
-                inquirer.Confirm('commit',
-                    message="Use this message for commit?",
-                    default=True
-                ),
-            ]
-            answers = inquirer.prompt(questions)
-            if answers and answers['commit']:
+            if always_accept_commit_message:
+                messageApproved = True
+            else:
+                questions = [
+                    inquirer.Confirm('commit',
+                        message="Use this message for commit?",
+                        default=True
+                    ),
+                ]
+                answers = inquirer.prompt(questions)
+                messageApproved = answers and answers['commit']
+
+            if messageApproved:
                 if commit_changes(commit_message):
                     if push:
                         push_changes()
