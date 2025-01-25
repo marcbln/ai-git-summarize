@@ -14,5 +14,6 @@ FAVORITE_MODELS = [
     "openrouter/anthropic/claude-3.5-sonnet",
     "openrouter/deepseek/deepseek-chat",
     "openrouter/meta-llama/llama-3-70b-instruct",
-    "openrouter/anthracite-org/magnum-v4-72b"
+    "openrouter/anthracite-org/magnum-v4-72b",
+    "openrouter/deepseek/deepseek-r1",
 ]
