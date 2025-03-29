@@ -67,6 +67,35 @@ class PromptBuilder:
             }
         ]
 
+    @staticmethod
+    def build_ai_decides_prompt(diff_text: str, detailed: bool = True) -> "PromptBuilder.MessageType":
+        """Build prompt where AI determines the Conventional Commit type."""
+        return [
+            {
+                "role": "system",
+                "content": "You are an expert at analyzing code changes and determining "
+                           "the appropriate Conventional Commit type. Follow these rules:\n"
+                           "1. First categorize the changes:\n"
+                           "   - feat: New user-facing functionality\n"
+                           "   - fix: Bug corrections\n"
+                           "   - chore: Maintenance tasks\n"
+                           "   - docs: Documentation changes\n"
+                           "   - test: Test additions/modifications\n"
+                           "   - refactor: Code improvements without behavior change\n"
+                           "   - perf: Performance optimizations\n"
+                           "   - ci: CI/CD pipeline changes\n"
+                           "2. Choose the most specific applicable type\n"
+                           "3. Format as: 'type: description'\n"
+                           f"{'4. After the summary, provide detailed bullet points of changes' if detailed else ''}"
+                           "\nOutput only the commit message, no additional text."
+            },
+            {
+                "role": "user",
+                "content": f"Analyze these changes and generate {'a detailed' if detailed else 'a single-line'} "
+                           f"Conventional Commit message:\n\n{diff_text}"
+            }
+        ]
+
 #     @staticmethod
 #     def build_commits_prompt(commits: str) -> list[dict]:
 #         """Build prompt for summarizing commit messages."""

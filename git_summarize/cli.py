@@ -63,13 +63,17 @@ def main(
         "openrouter/qwen/qwen-2.5-coder-32b-instruct",
         help="Model ID to use for generating commit messages. For OpenRouter models, prefix with 'openrouter/'. Use --list-models to see available options."
     ),
-    short: bool = typer.Option(False, "--short", "-s", help="Generate single-line commit message only"),
+    strategy: str = typer.Option(
+        "ai",
+        "--strategy",
+        "-s",
+        help="Commit message strategy: 'ai' (auto-detect type), 'short' (one-line), 'detailed' (multi-line), 'feedback' (code review)"
+    ),
     stage_all: bool = typer.Option(False, "--stage-all", "-a", help="Automatically stage all unstaged changes"),
     print_models_table: bool = typer.Option(False, "--print-models-table", help="Print detailed table of all supported models and exit"),
     list_models: bool = typer.Option(False, "--list-models", help="List model IDs only and exit"),
     refresh_openrouter_models: bool = typer.Option(False, "--refresh-openrouter-models", help="Refresh the cached OpenRouter models list and exit"),
     push: bool = typer.Option(False, "--push", "-p", help="Automatically push changes after commit without asking for confirmation"),
-    feedback: bool = typer.Option(False, "--feedback", "-f", help="Provide code quality feedback and suggestions for improvement"),
     always_accept_commit_message: bool = typer.Option(False, "--always-accept-commit-message", "-y",
                                                       help="Skip confirmation prompt and accept suggested commit message"),
 
@@ -131,13 +135,18 @@ def main(
     
     if diff_text:
 
-        if feedback:
+        if strategy == "feedback":
             feedback_text = ai_summarizer.generate_code_feedback(diff_text, model)
             console.print("\n[bold]Code Quality Feedback:[/bold]")
             console.print(Panel(feedback_text, border_style="blue"))
+            return
 
-
-        commit_message = ai_summarizer.summarize_changes(diff_text, model=model, short=short)
+        commit_message = ai_summarizer.summarize_changes(
+            diff_text,
+            model=model,
+            short=(strategy == "short"),
+            ai_decides=(strategy == "ai")
+        )
         if commit_message:
             console.print("\n[bold]Suggested commit message:[/bold]")
             console.print(Panel(commit_message, border_style="green"))

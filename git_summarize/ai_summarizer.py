@@ -74,21 +74,25 @@ class AISummarizer:
         return self._make_api_call(kwargs)
 
     def summarize_changes(self, diff_text: str, model: str = "gpt-3.5-turbo",
-                         short: bool = False) -> Optional[str]:
+                         short: bool = False, ai_decides: bool = False) -> Optional[str]:
         """Generate a commit message summary using AI.
         
         Args:
             diff_text: Git diff text to summarize
             model: Name of the model to use (can include 'openrouter/' prefix)
             short: If True, generate a shorter summary
+            ai_decides: If True, let AI determine Conventional Commit type
             
         Returns:
             str: Generated commit message summary if successful
             None: If API call fails or response is invalid
         """
         print(f"\nGenerating summary using model: {model}")
-        messages = (PromptBuilder.build_short_diff_prompt(diff_text) if short
-                   else PromptBuilder.build_diff_prompt(diff_text))
+        if ai_decides:
+            messages = PromptBuilder.build_ai_decides_prompt(diff_text, detailed=not short)
+        else:
+            messages = (PromptBuilder.build_short_diff_prompt(diff_text) if short
+                      else PromptBuilder.build_diff_prompt(diff_text))
         print(f"Generated prompt with {len(messages)} messages")
         
         kwargs = self._prepare_api_kwargs(messages, model)
