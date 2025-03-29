@@ -2,6 +2,7 @@ from typing import List, Dict, Union
 
 class PromptBuilder:
     MessageType = List[Dict[str, str]]
+    
     @staticmethod
     def build_diff_prompt(diff_text: str) -> "PromptBuilder.MessageType":
         """Build prompt for summarizing git diffs."""
@@ -96,18 +97,48 @@ class PromptBuilder:
             }
         ]
 
-#     @staticmethod
-#     def build_commits_prompt(commits: str) -> list[dict]:
-#         """Build prompt for summarizing commit messages."""
-#         prompt = f"""Please analyze these git commit messages and provide a concise summary of the changes:
+    @staticmethod
+    def build_history_prompt(commits: List[str], detail_level: str = "technical") -> "PromptBuilder.MessageType":
+        """Build prompt for summarizing git commit history.
+        
+        Args:
+            commits: List of commit messages
+            detail_level: Level of detail ("technical", "non-technical", "overview")
+            
+        Returns:
+            Formatted prompt messages
+        """
+        if detail_level == "technical":
+            system_content = """You are a technical lead analyzing git commit history. 
+Summarize these commits into a technical report highlighting:
+- Major features and improvements
+- Bug fixes and critical changes
+- Architectural decisions
+- Dependencies and tooling updates
+Format as markdown with clear sections."""
+        elif detail_level == "non-technical":
+            system_content = """You are a product manager analyzing git commit history. 
+Summarize these commits into a business-focused report highlighting:
+- New user-facing features
+- Bug fixes impacting users
+- Performance improvements
+- Notable technical debt
+Keep it concise and avoid technical jargon."""
+        else:  # overview
+            system_content = """You are an executive assistant analyzing git commit history. 
+Provide a high-level overview of these commits focusing on:
+- Key themes and initiatives
+- Major milestones
+- Overall progress
+Keep it very brief (3-5 bullet points max)."""
 
-# {commits}
-
-# Format the response as a bullet point list of the main changes."""
-
-#         return [
-#             {
-#                 "role": "user",
-#                 "content": prompt
-#             }
-#         ]
+        return [
+            {
+                "role": "system",
+                "content": system_content
+            },
+            {
+                "role": "user",
+                "content": "Here are the commits to analyze:\n\n" + "\n".join(commits)
+            }
+        ]

@@ -59,6 +59,29 @@ def commit_changes(message: str) -> bool:
         print(f"Error: Failed to commit changes. Command output: {e.stderr}")
         return False
 
+def get_commit_messages(commit_range: str = "HEAD~7..HEAD") -> List[str]:
+    """Get commit messages from git history.
+    
+    Args:
+        commit_range: Git commit range (e.g. "HEAD~7..HEAD")
+        
+    Returns:
+        List of commit messages
+    """
+    try:
+        result = subprocess.run(
+            ['git', 'log', commit_range, '--pretty=format:%s'],
+            capture_output=True, text=True, check=True
+        )
+        if not result.stdout:
+            print(f"Warning: No commits found in range {commit_range}")
+            return []
+        return result.stdout.strip().split('\n')
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Failed to get commit history. Command output: {e.stderr}")
+        return []
+
+
 def push_changes(remote: str = "origin", branch: str = "") -> bool:
     """Push changes to remote repository."""
     try:

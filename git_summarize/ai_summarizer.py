@@ -1,8 +1,8 @@
 import json
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from openai import OpenAI
 from rich import print
-from rich.panel import Panel  # Import Panel
+from rich.panel import Panel
 from .prompts import PromptBuilder
 
 
@@ -75,8 +75,56 @@ class AISummarizer:
         kwargs = self._prepare_api_kwargs(messages, model, max_tokens=300)
         return self._make_api_call(kwargs)
 
-    def summarize_changes(self, diff_text: str, model: str = "gpt-3.5-turbo",
-                         strategy: str = "ai") -> Optional[str]:
+    def summarize_history(self, commit_range: str, model: str, detail_level: str = "technical") -> Optional[str]:
+        """Summarize a range of git commits.
+        
+        Args:
+            commit_range: Git commit range (e.g. "HEAD~7..HEAD")
+            model: Model to use for summarization
+            detail_level: Level of detail ("technical", "non-technical", "overview")
+            
+        Returns:
+            str: Generated summary if successful
+            None: If API call fails
+        """
+        commits = self._get_commit_messages(commit_range)
+        if not commits:
+            return None
+        return self._summarize_commit_history(commits, model, detail_level)
+
+    def _get_commit_messages(self, commit_range: str) -> List[str]:
+        """Get commit messages from git history.
+        
+        Args:
+            commit_range: Git commit range
+            
+        Returns:
+            List of commit messages
+        """
+        from .git_operations import get_commit_messages
+        return get_commit_messages(commit_range)
+
+    def _summarize_commit_history(self, commits: List[str], model: str, detail_level: str) -> Optional[str]:
+        """Generate summary from commit messages.
+        
+        Args:
+            commits: List of commit messages
+            model: Model to use
+            detail_level: Level of detail
+            
+        Returns:
+            str: Generated summary
+        """
+        messages = PromptBuilder.build_history_prompt(commits, detail_level)
+        kwargs = self._prepare_api_kwargs(messages, model, max_tokens=500)
+        return self._make_api_call(kwargs)
+
+    def summarize_changes(
+        self,
+        diff_text: str,
+        model: str = "gpt-3.5-turbo",
+        strategy: str = "ai"
+    ) -> Optional[str]:
         """Generate a commit message summary using AI based on the specified strategy.
         
         Args:
@@ -109,7 +157,6 @@ class AISummarizer:
         elif strategy == "detailed":
             print(Panel("Generating DETAILED commit message.", title="[bold]Strategy[/bold]", border_style="cyan", expand=False))
             messages = PromptBuilder.build_diff_prompt(diff_text)
-        # Removed else block as strategy validation is now handled in cli.py
 
         print(f"\nGenerated prompt with {len(messages)} messages")
         

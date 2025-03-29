@@ -20,6 +20,40 @@ VALID_STRATEGIES = ["ai", "short", "detailed", "feedback"]
 
 app = typer.Typer()
 
+@app.command()
+def summarize_history(
+    range: str = typer.Argument("HEAD~7..HEAD", help="Git commit range"),
+    model: str = typer.Option("openrouter/qwen/qwen-2.5-coder-32b-instruct", help="Model to use"),
+    output: str = typer.Option("text", help="Output format (text, json, markdown)"),
+    detail: str = typer.Option("technical", help="Detail level (technical, non-technical, overview)")
+) -> None:
+    """Summarize a range of git commits"""
+    console = Console()
+    console.print(Panel(f"Summarizing commit history with model: [cyan]{model}[/cyan]",
+                     style="bold green"))
+    
+    client = setup_openai(model)
+    ai_summarizer = AISummarizer(client)
+    
+    summary = ai_summarizer.summarize_history(range, model, detail)
+    if not summary:
+        console.print("[red]Failed to generate history summary[/red]")
+        return
+        
+    if output == "json":
+        try:
+            import json
+            print(json.dumps({"summary": summary}, indent=2))
+        except Exception as e:
+            console.print(f"[red]Error formatting JSON: {e}[/red]")
+    elif output == "markdown":
+        console.print(Panel(summary, title="[bold]Commit History Summary[/bold]",
+                          border_style="blue", expand=False))
+    else:  # text
+        console.print("\n[bold]Commit History Summary:[/bold]")
+        console.print(summary)
+
+
 def display_models_table(refresh: bool = False) -> None:
     """Print a detailed table of supported models with their pricing information.
     
@@ -64,6 +98,8 @@ def display_models_table(refresh: bool = False) -> None:
 def main(
     model: str = typer.Option(
         "openrouter/qwen/qwen-2.5-coder-32b-instruct",
+        "--model",
+        "-m",
         help="Model ID to use for generating commit messages. For OpenRouter models, prefix with 'openrouter/'. Use --list-models to see available options."
     ),
     strategy: str = typer.Option(
@@ -189,6 +225,39 @@ def main(
             console.print("[red]Failed to generate commit message using API.[/red]")
     else:
         console.print("[yellow]No changes to summarize.[/yellow]")
+
+@app.command()
+def summarize_history(
+    range: str = typer.Argument("HEAD~7..HEAD", help="Git commit range"),
+    model: str = typer.Option(
+        "openrouter/qwen/qwen-2.5-coder-32b-instruct",
+        help="Model ID to use for generating commit summaries"
+    ),
+    output: str = typer.Option(
+        "text",
+        help="Output format (text, json, markdown)"
+    ),
+    detail: str = typer.Option(
+        "technical",
+        help="Detail level (technical, non-technical, overview)"
+    )
+) -> None:
+    """Summarize a range of git commits"""
+    console = Console()
+    console.print(Panel(f"Summarizing commit history with model: [cyan]{model}[/cyan]",
+                       style="bold green"))
+    
+    client = setup_openai(model)
+    ai_summarizer = AISummarizer(client)
+    
+    summary = ai_summarizer.summarize_history(range, model, detail)
+    if summary:
+        if output == "json":
+            console.print_json(summary)
+        else:
+            console.print(Panel(summary, title="[bold]Commit History Summary[/bold]"))
+    else:
+        console.print("[red]Failed to generate commit history summary[/red]")
 
 if __name__ == "__main__":
     app()
