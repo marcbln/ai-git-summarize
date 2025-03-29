@@ -98,6 +98,46 @@ class PromptBuilder:
         ]
 
     @staticmethod
+    def build_unified_prompt(diff_text: str) -> "PromptBuilder.MessageType":
+        """Build unified prompt that lets AI decide between short and detailed formats."""
+        return [
+            {
+                "role": "system",
+                "content": """You are an expert at analyzing git diffs and generating optimal commit messages. Follow these rules:
+
+1. First analyze the changes and determine if they warrant:
+   - SHORT format (single line) for simple changes like:
+     * Renames/refactors
+     * Small fixes
+     * Trivial updates
+   - DETAILED format (multi-line) for:
+     * Complex changes
+     * Multiple files modified
+     * Significant functionality changes
+
+2. Use Conventional Commit types:
+   feat: New features
+   fix: Bug fixes
+   chore: Maintenance
+   docs: Documentation
+   test: Tests
+   refactor: Code improvements
+   perf: Performance
+   ci: CI/CD
+
+3. Format:
+   - SHORT: "type: description" (one line)
+   - DETAILED: "type: description" followed by bullet points
+
+Output only the commit message."""
+            },
+            {
+                "role": "user",
+                "content": f"Analyze these changes and generate the optimal commit message:\n\n{diff_text}"
+            }
+        ]
+
+    @staticmethod
     def build_history_prompt(commits: List[str], detail_level: str = "technical") -> "PromptBuilder.MessageType":
         """Build prompt for summarizing git commit history.
         

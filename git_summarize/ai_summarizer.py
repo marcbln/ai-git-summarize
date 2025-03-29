@@ -137,20 +137,11 @@ class AISummarizer:
             None: If API call fails or response is invalid
         """
         print(f"\nGenerating summary using model: {model} with strategy: {strategy}")
-
-        # Define a simple threshold for deciding between short and detailed
-        SHORT_DIFF_THRESHOLD = 500 
         
         if strategy == "ai":
-            if len(diff_text) < SHORT_DIFF_THRESHOLD:
-                decision_text = "Diff seems simple. Generating SHORT commit message."
-                panel_color = "green"
-                messages = PromptBuilder.build_short_diff_prompt(diff_text)
-            else:
-                decision_text = "Diff seems complex. Generating DETAILED commit message."
-                panel_color = "blue"
-                messages = PromptBuilder.build_diff_prompt(diff_text)
-            print(Panel(decision_text, title="[bold]AI Decision[/bold]", border_style=panel_color, expand=False))
+            print(Panel("Using AI to determine optimal commit message format.",
+                      title="[bold]AI Decision[/bold]", border_style="green", expand=False))
+            messages = PromptBuilder.build_unified_prompt(diff_text)
         elif strategy == "short":
             print(Panel("Generating SHORT commit message.", title="[bold]Strategy[/bold]", border_style="yellow", expand=False))
             messages = PromptBuilder.build_short_diff_prompt(diff_text)

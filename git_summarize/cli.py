@@ -106,7 +106,7 @@ def main(
         "ai",
         "--strategy",
         "-s",
-        help="Commit message strategy: 'ai' (auto-detect type), 'short' (one-line), 'detailed' (multi-line), 'feedback' (code review)"
+        help="Commit message strategy: 'ai' (auto-detect format), 'short' (force one-line), 'detailed' (force multi-line), 'feedback' (code review)"
     ),
     stage_all: bool = typer.Option(False, "--stage-all", "-a", help="Automatically stage all unstaged changes"),
     print_models_table: bool = typer.Option(False, "--print-models-table", help="Print detailed table of all supported models and exit"),
