@@ -94,7 +94,7 @@ def display_models_table(refresh: bool = False) -> None:
     console.print(table)
     sys.exit(0)
 
-@app.command(name="summarize-changes")
+@app.command(name="git-summary")
 def main(
     model: str = typer.Option(
         "openrouter/qwen/qwen-2.5-coder-32b-instruct",
@@ -117,7 +117,7 @@ def main(
                                                       help="Skip confirmation prompt and accept suggested commit message"),
     
 ) -> None:
-    """Summarize git changes and create commits."""
+    """Summarize git changes and create commits (git-summary)."""
 
     if print_models_table:
         display_models_table(refresh_openrouter_models)
