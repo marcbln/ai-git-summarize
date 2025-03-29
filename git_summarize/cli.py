@@ -15,6 +15,9 @@ from .ai_client import setup_openai
 from .ai_summarizer import AISummarizer
 from .git_operations import check_unstaged_changes, stage_all_changes, get_git_diff, commit_changes, push_changes
 
+# Define valid strategies
+VALID_STRATEGIES = ["ai", "short", "detailed", "feedback"]
+
 app = typer.Typer()
 
 def display_models_table(refresh: bool = False) -> None:
@@ -112,6 +115,12 @@ def main(
                        style="bold green"))
     client = setup_openai(model)
     ai_summarizer = AISummarizer(client)
+
+    # Validate strategy
+    if strategy not in VALID_STRATEGIES:
+        console.print(f"[bold red]Error:[/bold red] Unknown strategy '{strategy}'.")
+        console.print(f"Valid choices are: {', '.join(VALID_STRATEGIES)}")
+        sys.exit(1)
     
     # Check for unstaged changes
     has_unstaged, unstaged_diff = check_unstaged_changes()
@@ -144,8 +153,7 @@ def main(
         commit_message = ai_summarizer.summarize_changes(
             diff_text,
             model=model,
-            short=(strategy == "short"),
-            ai_decides=(strategy == "ai")
+            strategy=strategy
         )
         if commit_message:
             console.print("\n[bold]Suggested commit message:[/bold]")

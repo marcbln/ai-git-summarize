@@ -1,6 +1,8 @@
 import json
 from typing import Optional, Dict, Any
 from openai import OpenAI
+from rich import print
+from rich.panel import Panel  # Import Panel
 from .prompts import PromptBuilder
 
 
@@ -74,26 +76,42 @@ class AISummarizer:
         return self._make_api_call(kwargs)
 
     def summarize_changes(self, diff_text: str, model: str = "gpt-3.5-turbo",
-                         short: bool = False, ai_decides: bool = False) -> Optional[str]:
-        """Generate a commit message summary using AI.
+                         strategy: str = "ai") -> Optional[str]:
+        """Generate a commit message summary using AI based on the specified strategy.
         
         Args:
             diff_text: Git diff text to summarize
             model: Name of the model to use (can include 'openrouter/' prefix)
-            short: If True, generate a shorter summary
-            ai_decides: If True, let AI determine Conventional Commit type
+            strategy: Commit message strategy ('ai', 'short', 'detailed')
             
         Returns:
             str: Generated commit message summary if successful
             None: If API call fails or response is invalid
         """
-        print(f"\nGenerating summary using model: {model}")
-        if ai_decides:
-            messages = PromptBuilder.build_ai_decides_prompt(diff_text, detailed=not short)
-        else:
-            messages = (PromptBuilder.build_short_diff_prompt(diff_text) if short
-                      else PromptBuilder.build_diff_prompt(diff_text))
-        print(f"Generated prompt with {len(messages)} messages")
+        print(f"\nGenerating summary using model: {model} with strategy: {strategy}")
+
+        # Define a simple threshold for deciding between short and detailed
+        SHORT_DIFF_THRESHOLD = 500 
+        
+        if strategy == "ai":
+            if len(diff_text) < SHORT_DIFF_THRESHOLD:
+                decision_text = "Diff seems simple. Generating SHORT commit message."
+                panel_color = "green"
+                messages = PromptBuilder.build_short_diff_prompt(diff_text)
+            else:
+                decision_text = "Diff seems complex. Generating DETAILED commit message."
+                panel_color = "blue"
+                messages = PromptBuilder.build_diff_prompt(diff_text)
+            print(Panel(decision_text, title="[bold]AI Decision[/bold]", border_style=panel_color, expand=False))
+        elif strategy == "short":
+            print(Panel("Generating SHORT commit message.", title="[bold]Strategy[/bold]", border_style="yellow", expand=False))
+            messages = PromptBuilder.build_short_diff_prompt(diff_text)
+        elif strategy == "detailed":
+            print(Panel("Generating DETAILED commit message.", title="[bold]Strategy[/bold]", border_style="cyan", expand=False))
+            messages = PromptBuilder.build_diff_prompt(diff_text)
+        # Removed else block as strategy validation is now handled in cli.py
+
+        print(f"\nGenerated prompt with {len(messages)} messages")
         
         kwargs = self._prepare_api_kwargs(messages, model)
         return self._make_api_call(kwargs)
