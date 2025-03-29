@@ -148,9 +148,12 @@ def generate_output(report_data: Dict[str, Any], output_format: str, console: Co
         md_content = "\n".join(md_lines)
         console.print(Panel(md_content, title="[bold]Work Report[/bold]", border_style="blue", expand=False))
 
-def load_project_groups_config() -> Dict[str, List[str]]:
-    """Load and validate projects-groups configuration file.
+def load_project_groups_config(validate_paths: bool = True) -> Dict[str, List[str]]:
+    """Load projects-groups configuration file.
     
+    Args:
+        validate_paths: If True, validate that all project paths exist
+        
     Returns:
         Dictionary mapping group names to lists of project paths
         
@@ -171,11 +174,12 @@ def load_project_groups_config() -> Dict[str, List[str]]:
     if not config or "projects-groups" not in config:
         raise ValueError("Config file missing 'projects-groups' key")
         
-    # Validate project paths exist
-    for group, paths in config["projects-groups"].items():
-        for path in paths:
-            if not Path(path).exists():
-                raise ValueError(f"Project path does not exist: {path}")
+    if validate_paths:
+        # Validate project paths exist
+        for group, paths in config["projects-groups"].items():
+            for path in paths:
+                if not Path(path).exists():
+                    raise ValueError(f"Project path does not exist: {path}")
                 
     return config
 
@@ -468,15 +472,22 @@ def generate_report(
     """Generate work report for a project group between dates"""
     console = Console()
     
+    # Load config without path validation first to check group exists
     try:
-        # Load and validate config
-        config = load_project_groups_config()
+        config = load_project_groups_config(validate_paths=False)
+        
         if group not in config["projects-groups"]:
             console.print(f"[red]Error: Unknown group '{group}'[/red]")
             console.print(f"Available groups: {', '.join(config['projects-groups'].keys())}")
             return
             
-        projects = config["projects-groups"][group]
+        # Now validate paths just for the requested group
+        projects = []
+        for path in config["projects-groups"][group]:
+            if not Path(path).exists():
+                console.print(f"[red]Error: Project path does not exist: {path}[/red]")
+                return
+            projects.append(path)
         
         # Validate dates
         from datetime import datetime
