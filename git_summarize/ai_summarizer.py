@@ -119,6 +119,133 @@ class AISummarizer:
         kwargs = self._prepare_api_kwargs(messages, model, max_tokens=500)
         return self._make_api_call(kwargs)
 
+    def generate_project_report(
+        self,
+        projects: List[str],
+        start_date: str,
+        end_date: str,
+        model: str
+    ) -> Dict[str, Any]:
+        """Generate a report for multiple projects between dates.
+        
+        Args:
+            projects: List of project paths
+            start_date: Start date (YYYY-MM-DD)
+            end_date: End date (YYYY-MM-DD)
+            model: Model to use for analysis
+            
+        Returns:
+            Dictionary containing report data
+        """
+        from datetime import datetime
+        from .git_operations import get_commit_messages
+        
+        report_data = {
+            "period": {
+                "start": start_date,
+                "end": end_date
+            },
+            "projects": [],
+            "total_commits": 0,
+            "unique_authors": set(),
+            "files_changed": 0
+        }
+        
+        for project_path in projects:
+            try:
+                # Get commits for this project within date range
+                commits = get_commit_messages(
+                    f"--since={start_date} --until={end_date}",
+                    cwd=project_path
+                )
+                
+                if not commits:
+                    continue
+                    
+                # Get commit stats for this project
+                stats = self._get_commit_stats(project_path, start_date, end_date)
+                
+                project_report = {
+                    "path": project_path,
+                    "commit_count": len(commits),
+                    "authors": stats.get("authors", []),
+                    "files_changed": stats.get("files_changed", 0),
+                    "commits": commits
+                }
+                
+                report_data["projects"].append(project_report)
+                report_data["total_commits"] += len(commits)
+                report_data["unique_authors"].update(stats.get("authors", []))
+                report_data["files_changed"] += stats.get("files_changed", 0)
+                
+            except Exception as e:
+                print(f"Error processing project {project_path}: {str(e)}")
+                continue
+                
+        # Convert authors set to list
+        report_data["unique_authors"] = list(report_data["unique_authors"])
+        
+        return report_data
+        
+    def _get_commit_stats(self, project_path: str, start_date: str, end_date: str) -> Dict[str, Any]:
+        """Get commit statistics for a project within date range.
+        
+        Args:
+            project_path: Path to git project
+            start_date: Start date (YYYY-MM-DD)
+            end_date: End date (YYYY-MM-DD)
+            
+        Returns:
+            Dictionary with stats:
+            - authors: list of unique authors
+            - files_changed: total files changed
+        """
+        import subprocess
+        from collections import defaultdict
+        
+        stats = {
+            "authors": set(),
+            "files_changed": 0
+        }
+        
+        try:
+            # Get unique authors
+            author_cmd = [
+                "git", "log",
+                f"--since={start_date}",
+                f"--until={end_date}",
+                "--pretty=format:%an",
+                "--no-merges"
+            ]
+            authors = subprocess.check_output(
+                author_cmd,
+                cwd=project_path,
+                text=True
+            ).strip().split('\n')
+            if authors and authors[0]:  # Check if there are any authors
+                stats["authors"] = set(authors)
+            
+            # Get files changed count
+            files_cmd = [
+                "git", "log",
+                f"--since={start_date}",
+                f"--until={end_date}",
+                "--name-only",
+                "--pretty=format:",
+                "--no-merges"
+            ]
+            files = subprocess.check_output(
+                files_cmd,
+                cwd=project_path,
+                text=True
+            ).strip().split('\n')
+            stats["files_changed"] = len(set(f for f in files if f))
+            
+        except subprocess.CalledProcessError as e:
+            print(f"Error getting stats for {project_path}: {e}")
+            
+        return stats
+
     def summarize_changes(
         self,
         diff_text: str,
