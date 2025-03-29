@@ -16,9 +16,53 @@ from .ai_summarizer import AISummarizer
 from .git_operations import check_unstaged_changes, stage_all_changes, get_git_diff, commit_changes, push_changes
 
 # Define valid strategies
-VALID_STRATEGIES = ["ai", "short", "detailed", "feedback"]
+VALID_STRATEGIES = ["ai", "short", "detailed"]
 
 app = typer.Typer()
+
+@app.command(name="git-feedback")
+def feedback(
+    model: str = typer.Option(
+        "openrouter/qwen/qwen-2.5-coder-32b-instruct",
+        "--model",
+        "-m",
+        help="Model ID to use for generating code feedback"
+    ),
+    stage_all: bool = typer.Option(False, "--stage-all", "-a", help="Automatically stage all unstaged changes")
+) -> None:
+    """Generate code quality feedback for uncommitted changes"""
+    console = Console()
+    console.print(Panel(f"Generating code feedback with model: [cyan]{model}[/cyan]",
+                       style="bold green"))
+    client = setup_openai(model)
+    ai_summarizer = AISummarizer(client)
+
+    # Check for unstaged changes
+    has_unstaged, unstaged_diff = check_unstaged_changes()
+    if has_unstaged:
+        console.print("\n[yellow]Found unstaged changes![/yellow]")
+        if stage_all:
+            print("Staging all changes...")
+            stage_all_changes()
+        else:
+            questions = [
+                inquirer.Confirm('stage',
+                    message="Would you like to stage these changes?",
+                    default=False
+                ),
+            ]
+            answers = inquirer.prompt(questions)
+            if answers and answers['stage']:
+                stage_all_changes()
+
+    diff_text = get_git_diff()
+    
+    if diff_text:
+        feedback_text = ai_summarizer.generate_code_feedback(diff_text, model)
+        console.print("\n[bold]Code Quality Feedback:[/bold]")
+        console.print(Panel(feedback_text, border_style="blue"))
+    else:
+        console.print("[yellow]No changes to analyze.[/yellow]")
 
 @app.command()
 def summarize_history(
@@ -106,7 +150,7 @@ def main(
         "ai",
         "--strategy",
         "-s",
-        help="Commit message strategy: 'ai' (auto-detect format), 'short' (force one-line), 'detailed' (force multi-line), 'feedback' (code review)"
+        help="Commit message strategy: 'ai' (auto-detect format), 'short' (force one-line), 'detailed' (force multi-line)"
     ),
     stage_all: bool = typer.Option(False, "--stage-all", "-a", help="Automatically stage all unstaged changes"),
     print_models_table: bool = typer.Option(False, "--print-models-table", help="Print detailed table of all supported models and exit"),
@@ -179,13 +223,6 @@ def main(
     diff_text = get_git_diff()
     
     if diff_text:
-
-        if strategy == "feedback":
-            feedback_text = ai_summarizer.generate_code_feedback(diff_text, model)
-            console.print("\n[bold]Code Quality Feedback:[/bold]")
-            console.print(Panel(feedback_text, border_style="blue"))
-            return
-
         commit_message = ai_summarizer.summarize_changes(
             diff_text,
             model=model,
