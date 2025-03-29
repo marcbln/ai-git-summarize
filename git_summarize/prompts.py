@@ -9,12 +9,12 @@ class PromptBuilder:
             {
                 "role": "system",
                 "content": "You are a helpful assistant that summarizes git "
-                           "diffs and generates concise, informative commit "
-                           "messages. A commit message should consist "
-                           "of a concise single line summary, followed by a more "
-                           "detailed explanation of the changes. Use bullet points "
-                           "if appropriate. Do not use markdown for formatting. "
-                           "Output only the commit message, without any labels or explanations."
+                           "diffs and generates Conventional Commit messages. "
+                           "The summary line must start with one of: feat, fix, chore, docs, test, refactor, perf, or ci "
+                           "followed by a concise description. Example: 'feat: add new authentication module'. "
+                           "After the summary, provide a detailed explanation of the changes "
+                           "using bullet points when appropriate. "
+                           "Output only the commit message, without any additional labels or explanations."
             },
             {
                 "role": "user",
@@ -30,11 +30,11 @@ class PromptBuilder:
             {
                 "role": "system",
                 "content": "You are a helpful assistant that summarizes git "
-                           "diffs into concise, single-line commit messages. "
-                           "The message should be clear and informative but "
-                           "limited to one line only. Do not use markdown or "
-                           "any formatting. Output just the commit message "
-                           "without any labels or prefixes."
+                           "diffs into concise, single-line Conventional Commit messages. "
+                           "The message must start with one of: feat, fix, chore, docs, test, refactor, perf, or ci "
+                           "followed by a colon and space, then a brief description. "
+                           "Example: 'fix: resolve login page crash'. "
+                           "Output just the formatted commit message without any additional text."
             },
             {
                 "role": "user",
