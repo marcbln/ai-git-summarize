@@ -249,8 +249,8 @@ class AISummarizer:
     def summarize_changes(
         self,
         diff_text: str,
-        model: str = "gpt-3.5-turbo",
-        strategy: str = "ai"
+        model: str,
+        strategy: str
     ) -> Optional[str]:
         """Generate a commit message summary using AI based on the specified strategy.
         
@@ -275,6 +275,11 @@ class AISummarizer:
         elif strategy == "detailed":
             print(Panel("Generating DETAILED commit message.", title="[bold]Strategy[/bold]", border_style="cyan", expand=False))
             messages = PromptBuilder.build_diff_prompt(diff_text)
+        else:
+            raise ValueError(f"Invalid strategy: {strategy}. Valid options are 'unified', 'short', 'detailed'")
+
+        if not messages:
+            raise RuntimeError("Failed to generate prompt messages for commit strategy")
 
         print(f"\nGenerated prompt with {len(messages)} messages")
         

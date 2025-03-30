@@ -1,11 +1,6 @@
 # Git-Summarize Productivity Improvement Plan
 
 ## Workflow Optimizations
-1. **Batch Processing**
-   - Add `--batch` flag to process multiple commits at once
-   - Support directory-based batch operations
-   - Implement parallel processing for large batches
-
 2. **History Summarization**
    - Add `summarize-history` command for commit ranges
    - Support weekly/monthly summary reports

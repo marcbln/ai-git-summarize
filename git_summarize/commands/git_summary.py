@@ -29,7 +29,7 @@ def main(
         "ai",
         "--strategy",
         "-s",
-        help="Commit message strategy: 'ai' (auto-detect format), 'short' (force one-line), 'detailed' (force multi-line)"
+        help="Commit message strategy: 'ai' (let ai decide the format), 'short' (one-line), 'detailed' (multi-line)"
     ),
     stage_all: bool = typer.Option(False, "--stage-all", "-a", help="Automatically stage all unstaged changes"),
     push: bool = typer.Option(False, "--push", "-p", help="Automatically push changes after commit without asking for confirmation"),
