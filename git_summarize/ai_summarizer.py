@@ -40,7 +40,7 @@ class AISummarizer:
             print("\nSending API request...")
             response = self.client.chat.completions.create(**kwargs)
             print("Successfully received API response")
-            print(f"\nFull API response: {response}")
+            print(f"\nFull API response: {response.json()}")
 
             # Validate response
             if (not response or not hasattr(response, 'choices') or
