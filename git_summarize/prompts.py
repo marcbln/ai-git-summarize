@@ -2,6 +2,7 @@ from typing import List, Dict, Union
 
 class PromptBuilder:
     MessageType = List[Dict[str, str]]
+    
     @staticmethod
     def build_diff_prompt(diff_text: str) -> "PromptBuilder.MessageType":
         """Build prompt for summarizing git diffs."""
@@ -9,12 +10,12 @@ class PromptBuilder:
             {
                 "role": "system",
                 "content": "You are a helpful assistant that summarizes git "
-                           "diffs and generates concise, informative commit "
-                           "messages. A commit message should consist "
-                           "of a concise single line summary, followed by a more "
-                           "detailed explanation of the changes. Use bullet points "
-                           "if appropriate. Do not use markdown for formatting. "
-                           "Output only the commit message, without any labels or explanations."
+                           "diffs and generates Conventional Commit messages. "
+                           "The summary line must start with one of: feat, fix, chore, docs, test, refactor, perf, or ci "
+                           "followed by a concise description. Example: 'feat: add new authentication module'. "
+                           "After the summary, provide a detailed explanation of the changes "
+                           "using bullet points when appropriate. "
+                           "Output only the commit message, without any additional labels or explanations."
             },
             {
                 "role": "user",
@@ -30,11 +31,11 @@ class PromptBuilder:
             {
                 "role": "system",
                 "content": "You are a helpful assistant that summarizes git "
-                           "diffs into concise, single-line commit messages. "
-                           "The message should be clear and informative but "
-                           "limited to one line only. Do not use markdown or "
-                           "any formatting. Output just the commit message "
-                           "without any labels or prefixes."
+                           "diffs into concise, single-line Conventional Commit messages. "
+                           "The message must start with one of: feat, fix, chore, docs, test, refactor, perf, or ci "
+                           "followed by a colon and space, then a brief description. "
+                           "Example: 'fix: resolve login page crash'. "
+                           "Output just the formatted commit message without any additional text."
             },
             {
                 "role": "user",
@@ -67,18 +68,117 @@ class PromptBuilder:
             }
         ]
 
-#     @staticmethod
-#     def build_commits_prompt(commits: str) -> list[dict]:
-#         """Build prompt for summarizing commit messages."""
-#         prompt = f"""Please analyze these git commit messages and provide a concise summary of the changes:
+    @staticmethod
+    def build_ai_decides_prompt(diff_text: str, detailed: bool = True) -> "PromptBuilder.MessageType":
+        """Build prompt where AI determines the Conventional Commit type."""
+        return [
+            {
+                "role": "system",
+                "content": "You are an expert at analyzing code changes and determining "
+                           "the appropriate Conventional Commit type. Follow these rules:\n"
+                           "1. First categorize the changes:\n"
+                           "   - feat: New user-facing functionality\n"
+                           "   - fix: Bug corrections\n"
+                           "   - chore: Maintenance tasks\n"
+                           "   - docs: Documentation changes\n"
+                           "   - test: Test additions/modifications\n"
+                           "   - refactor: Code improvements without behavior change\n"
+                           "   - perf: Performance optimizations\n"
+                           "   - ci: CI/CD pipeline changes\n"
+                           "2. Choose the most specific applicable type\n"
+                           "3. Format as: 'type: description'\n"
+                           f"{'4. After the summary, provide detailed bullet points of changes' if detailed else ''}"
+                           "\nOutput only the commit message, no additional text."
+            },
+            {
+                "role": "user",
+                "content": f"Analyze these changes and generate {'a detailed' if detailed else 'a single-line'} "
+                           f"Conventional Commit message:\n\n{diff_text}"
+            }
+        ]
 
-# {commits}
+    @staticmethod
+    def build_unified_prompt(diff_text: str) -> "PromptBuilder.MessageType":
+        """Build unified prompt that lets AI decide between short and detailed formats."""
+        return [
+            {
+                "role": "system",
+                "content": """You are an expert at analyzing git diffs and generating optimal commit messages. Follow these rules:
 
-# Format the response as a bullet point list of the main changes."""
+1. First analyze the changes and determine if they warrant:
+   - SHORT format (single line) for simple changes like:
+     * Renames/refactors
+     * Small fixes
+     * Trivial updates
+   - DETAILED format (multi-line) for:
+     * Complex changes
+     * Multiple files modified
+     * Significant functionality changes
 
-#         return [
-#             {
-#                 "role": "user",
-#                 "content": prompt
-#             }
-#         ]
+2. Use Conventional Commit types:
+   feat: New features
+   fix: Bug fixes
+   chore: Maintenance
+   docs: Documentation
+   test: Tests
+   refactor: Code improvements
+   perf: Performance
+   ci: CI/CD
+
+3. Format:
+   - SHORT: "type: description" (one line)
+   - DETAILED: "type: description" followed by bullet points
+
+Output only the commit message."""
+            },
+            {
+                "role": "user",
+                "content": f"Analyze these changes and generate the optimal commit message:\n\n{diff_text}"
+            }
+        ]
+
+    @staticmethod
+    def build_history_prompt(commits: List[str], detail_level: str = "technical") -> "PromptBuilder.MessageType":
+        """Build prompt for summarizing git commit history.
+        
+        Args:
+            commits: List of commit messages
+            detail_level: Level of detail ("technical", "non-technical", "overview")
+            
+        Returns:
+            Formatted prompt messages
+        """
+        if detail_level == "technical":
+            system_content = """You are a technical lead analyzing git commit history. 
+Summarize these commits into a technical report highlighting:
+- Major features and improvements
+- Bug fixes and critical changes
+- Architectural decisions
+- Dependencies and tooling updates
+Format as markdown with clear sections."""
+        elif detail_level == "non-technical":
+            system_content = """You are a product manager analyzing git commit history. 
+Summarize these commits into a business-focused report highlighting:
+- New user-facing features
+- Bug fixes impacting users
+- Performance improvements
+- Notable technical debt
+Keep it concise and avoid technical jargon."""
+        else:  # overview
+            system_content = """You are an executive assistant analyzing git commit history. 
+Provide a high-level overview of these commits focusing on:
+- Key themes and initiatives
+- Major milestones
+- Overall progress
+Keep it very brief (3-5 bullet points max)."""
+
+        return [
+            {
+                "role": "system",
+                "content": system_content
+            },
+            {
+                "role": "user",
+                "content": "Here are the commits to analyze:\n\n" + "\n".join(commits)
+            }
+        ]
