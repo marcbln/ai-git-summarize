@@ -1,7 +1,7 @@
 import json
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
-from rich import print
+from rich import print as rprint
 from rich.panel import Panel
 from .prompts import PromptBuilder
 
