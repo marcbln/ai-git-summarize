@@ -58,6 +58,18 @@ class AISummarizer:
             if hasattr(e, '__dict__'):
                 print(f"Full error details: {e.__dict__}")
             return None
+            
+    def _strip_backticks(self, text: Optional[str]) -> Optional[str]:
+        """Removes surrounding single or triple backticks from a string."""
+        if not text:
+            return text
+            
+        if text.startswith("```") and text.endswith("```"):
+            return text[3:-3].strip()
+        elif text.startswith("`") and text.endswith("`"):
+            return text[1:-1].strip()
+        else:
+            return text
 
     def generate_code_feedback(self, diff_text: str, model: str) -> Optional[str]:
         """Generate code quality feedback using AI.
@@ -284,4 +296,5 @@ class AISummarizer:
         print(f"\nGenerated prompt with {len(messages)} messages")
         
         kwargs = self._prepare_api_kwargs(messages, model)
-        return self._make_api_call(kwargs)
+        summary = self._make_api_call(kwargs)
+        return self._strip_backticks(summary)
