@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
 from rich import print
@@ -60,16 +61,26 @@ class AISummarizer:
             return None
             
     def _strip_backticks(self, text: Optional[str]) -> Optional[str]:
-        """Removes surrounding single or triple backticks from a string."""
+        """Removes surrounding single or triple backticks, including language identifiers."""
         if not text:
             return text
-            
-        if text.startswith("```") and text.endswith("```"):
-            return text[3:-3].strip()
-        elif text.startswith("`") and text.endswith("`"):
-            return text[1:-1].strip()
-        else:
-            return text
+
+        text = text.strip() # Remove leading/trailing whitespace
+
+        # Pattern for triple backticks with optional language identifier
+        # Handles ```lang\ncontent``` or ```content``` or ```lang content```
+        # re.DOTALL allows '.' to match newlines
+        triple_match = re.match(r"^```(?:[a-zA-Z0-9_.-]*)?\s*\n?(.*?)\n?```$", text, re.DOTALL)
+        if triple_match:
+            return triple_match.group(1).strip()
+
+        # Pattern for single backticks
+        single_match = re.match(r"^`(.*?)`$", text, re.DOTALL)
+        if single_match:
+            return single_match.group(1).strip()
+
+        # If no backticks match, return original text
+        return text
 
     def generate_code_feedback(self, diff_text: str, model: str) -> Optional[str]:
         """Generate code quality feedback using AI.
