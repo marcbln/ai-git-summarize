@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "PocketFlow Docs": {
+      "url": "https://gitmcp.io/The-Pocket/PocketFlow",
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}

@@ -1,10 +1,12 @@
 import json
 import re
+import os
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
 from rich import print as rprint
 from rich.panel import Panel
 from .prompts import PromptBuilder
+from .git_operations import get_file_content_at_commit # Assuming this will be added
 
 
 class AISummarizer:
@@ -309,3 +311,98 @@ class AISummarizer:
         kwargs = self._prepare_api_kwargs(messages, model)
         summary = self._make_api_call(kwargs)
         return self._strip_backticks(summary)
+
+    def analyze_commit_impact(
+        self,
+        diff_text: str,
+        model: str,
+        commit_ref: str, # Needed to fetch file content at the correct version
+        repo_path: str = "." # Assume current directory is repo root unless specified
+    ) -> Optional[str]:
+        """Analyze git diff for potential risks, requesting file context if needed.
+
+        Args:
+            diff_text: Git diff text to analyze.
+            model: Name of the model to use.
+            commit_ref: The specific commit reference (e.g., 'HEAD', hash) for context.
+            repo_path: Path to the git repository root.
+
+        Returns:
+            str: AI's analysis ('Clean Refactoring' or 'Potential Risk' with justification).
+            None: If API calls fail or critical errors occur.
+        """
+        print(f"\nAnalyzing commit impact using model: {model} for commit: {commit_ref}")
+
+        # --- Initial Analysis Attempt ---
+        messages = PromptBuilder.build_commit_analysis_prompt(diff_text)
+        kwargs = self._prepare_api_kwargs(messages, model, max_tokens=500) # Use a potentially larger token count for analysis
+        initial_response = self._make_api_call(kwargs)
+
+        if not initial_response:
+            return None # API call failed
+
+        # --- Check for File Request ---
+        requested_file = None
+        try:
+            # Use regex to find the specific JSON structure, allowing for surrounding text
+            # This looks for {"request_file": "some/path.py"} potentially within other text.
+            # It captures the file path.
+            match = re.search(r'{\s*"request_file"\s*:\s*"([^"]+)"\s*}', initial_response)
+            if match:
+                requested_file = match.group(1)
+                print(Panel(f"AI requested context for file: [bold cyan]{requested_file}[/]",
+                          title="[bold yellow]File Request[/]", border_style="yellow"))
+            else:
+                 print("AI did not request specific file context.")
+
+        except Exception as e:
+            # Log if regex or parsing fails, but proceed assuming no valid request found
+            print(f"[yellow]Warning:[/yellow] Could not parse potential file request from AI response: {e}. Assuming direct analysis.")
+            requested_file = None # Ensure it's None if parsing failed
+
+        # --- Handle File Request or Return Initial Analysis ---
+        if requested_file:
+            try:
+                # Attempt to fetch the file content at the *parent* of the commit_ref
+                if requested_file.startswith('a/') or requested_file.startswith('b/'):
+                    actual_file_path = requested_file[2:]
+                else:
+                    actual_file_path = requested_file
+
+                parent_commit_ref = f"{commit_ref}^"
+                print(f"Fetching content for '{actual_file_path}' at commit '{parent_commit_ref}'...")
+
+                file_content = get_file_content_at_commit(parent_commit_ref, actual_file_path, cwd=repo_path)
+
+                if file_content is None: # Function might return None on git errors handled internally
+                     print(f"[bold red]Error:[/bold red] Failed to retrieve content for '{actual_file_path}' at commit '{parent_commit_ref}'.")
+                     return f"Error: Failed to retrieve content for requested file '{requested_file}'."
+
+                print(f"Successfully fetched content for '{actual_file_path}'.")
+
+                # --- Second Analysis Attempt with Context ---
+                messages = PromptBuilder.build_commit_analysis_prompt(
+                    diff_text,
+                    file_path=requested_file, # Pass the original requested path for context
+                    file_content=file_content
+                )
+                kwargs = self._prepare_api_kwargs(messages, model, max_tokens=1000) # Allow more tokens for combined context
+
+                print("Sending follow-up request with file context...")
+                final_response = self._make_api_call(kwargs)
+
+                # Strip backticks just in case the final response has them
+                return self._strip_backticks(final_response)
+
+            except FileNotFoundError as e:
+                # Handle file not found specifically after request
+                print(f"[bold red]Error:[/bold red] {e}")
+                return f"Error: AI requested file '{requested_file}', but it could not be found at commit '{parent_commit_ref}'."
+            except Exception as e:
+                # Handle other errors during file fetching/second call
+                print(f"[bold red]Error processing file request or follow-up analysis:[/bold red] {e}")
+                return f"Error during follow-up analysis after requesting file '{requested_file}': {e}"
+        else:
+            # No valid file request found, return the initial analysis
+            print("Proceeding with initial analysis result.")
+            return self._strip_backticks(initial_response)
