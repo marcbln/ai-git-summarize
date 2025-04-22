@@ -39,7 +39,7 @@ def feedback():
     from .commands.feedback import feedback as feedback_command
     feedback_command()
 
-@app.command(name="git-summary")
+@app.command(name="git-summary", context_settings={"help_option_names": ["-h", "--help"]})
 def git_summary(
     model: str = typer.Option(
         "openrouter/qwen/qwen-2.5-coder-32b-instruct",
