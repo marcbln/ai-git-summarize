@@ -22,7 +22,7 @@ from .git_operations import (
     get_commit_diff # <-- Import the new function
 )
 from .commands.feedback import feedback
-from .commands.git_summary import main as git_summary_main
+from .commands.git_summary import git_summary
 from .commands.summarize_history import summarize_history as summarize_history_command
 from .commands.generate_report import generate_report as generate_report_command
 from .commands.openrouter import app as openrouter_app
@@ -30,7 +30,7 @@ from .commands.openrouter import app as openrouter_app
 # Define valid strategies
 VALID_STRATEGIES = ["ai", "short", "detailed"]
 
-app = typer.Typer()
+from .app import app
 app.add_typer(openrouter_app, name="openrouter", help="Manage OpenRouter models")
 
 @app.command(name="git-feedback")
@@ -39,28 +39,6 @@ def feedback():
     from .commands.feedback import feedback as feedback_command
     feedback_command()
 
-@app.command(name="git-summary", context_settings={"help_option_names": ["-h", "--help"]})
-def git_summary(
-    model: str = typer.Option(
-        "openrouter/qwen/qwen-2.5-coder-32b-instruct",
-        "--model",
-        "-m",
-        help="Model ID to use for generating commit messages. For OpenRouter models, prefix with 'openrouter/'. Use --list-models to see available options."
-    ),
-    strategy: str = typer.Option(
-        "ai",
-        "--strategy",
-        "-s",
-        help="Commit message strategy: 'ai' (auto-detect format), 'short' (force one-line), 'detailed' (force multi-line)"
-    ),
-    stage_all: bool = typer.Option(False, "--stage-all", "-a", help="Automatically stage all unstaged changes"),
-    push: bool = typer.Option(False, "--push", "-p", help="Automatically push changes after commit without asking for confirmation"),
-    always_accept_commit_message: bool = typer.Option(False, "--always-accept-commit-message", "-y",
-                                                      help="Skip confirmation prompt and accept suggested commit message"),
-):
-    """Summarize git changes and create commits"""
-    from .commands.git_summary import main as git_summary_command
-    git_summary_command(model, strategy, stage_all, push, always_accept_commit_message)
 
 @app.command()
 def summarize_history(
