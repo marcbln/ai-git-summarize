@@ -20,10 +20,10 @@ from ..openrouter_models import get_openrouter_models
 
 def main(
     model: str = typer.Option(
-        "openrouter/qwen/qwen-2.5-coder-32b-instruct",
+        "openrouter/google/gemini-2.0-flash-exp:free" # "openrouter/qwen/qwen-2.5-coder-32b-instruct",
         "--model",
         "-m",
-        help="Model ID to use for generating commit messages. For OpenRouter models, prefix with 'openrouter/'. Use --list-models to see available options."
+        help="Model ID to use for generating commit messages. For OpenRouter models, prefix with 'openrouter/'."
     ),
     strategy: str = typer.Option(
         "ai",
