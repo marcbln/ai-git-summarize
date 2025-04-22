@@ -71,7 +71,7 @@ def main(
             strategy=strategy
         )
         if commit_message:
-            console.print("\n[bold]Suggested commit message:[/bold]")
+            console.print(f"\n[bold]Suggested commit message (from {model}):[/bold]")
             console.print(Panel(commit_message, border_style="green"))
 
             if always_accept_commit_message:
