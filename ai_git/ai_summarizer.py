@@ -40,7 +40,7 @@ class AISummarizer:
     def _make_api_call(self, kwargs: Dict[str, Any]) -> Optional[str]:
         """Make API call with error handling and response validation."""
         try:
-            print("\nSending API request...")
+            print(f"\nSending API request to {kwargs.get('model', 'unknown model')}...")
             response = self.client.chat.completions.create(**kwargs)
             print("Successfully received API response")
             print(f"\nFull API response: {response.json()}")

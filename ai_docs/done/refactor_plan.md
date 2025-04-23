@@ -1,81 +1,56 @@
-# AI-Git Refactoring Plan v2
+# Command Duplication Refactor Plan
 
-## Combined Objectives
-1. Rename CLI tool from `git-summarize` to `ai-git`
-2. Rename directory structure from `git_summarize/` to `ai_git/`
+## Problem Statement
+Duplicate command implementations exist between:
+- `cli.py` (registration + logic)
+- Individual command modules (logic only)
 
+## Solution Approach
+1. **Separation of Concerns**
+   - `cli.py`: Handle command registration only
+   - Command modules: Contain full implementations
+
+2. **Implementation Steps**
 ```mermaid
 graph TD
-    A[Refactoring Process] --> B[Directory Structure]
-    A --> C[Package Configuration]
-    A --> D[Code References]
-    A --> E[Documentation]
-    A --> F[Testing]
-    
-    B --> B1[[Rename git_summarize/ to ai_git/]]
-    B --> B2[[Update internal imports]]
-    
-    C --> C1[[Update pyproject.toml name]]
-    C --> C2[[Modify entrypoint path]]
-    C --> C3[[Update environment variables]]
-    
-    D --> D1[[CLI command definitions]]
-    D --> D2[[Help text references]]
-    
-    E --> E1[[Merge README files]]
-    E --> E2[[Update command examples]]
-    E --> E3[[Update ai_docs references]]
-    
-    F --> F1[[Reinstall package]]
-    F --> F2[[Test CLI availability]]
-    F --> F3[[Verify imports]]
+    A[1. Remove CLI Wrappers] --> B[2. Convert Command Modules]
+    B --> C[3. Standardize Registration]
+    C --> D[4. Update Documentation]
+    D --> E[5. Validation Testing]
 ```
 
-## Implementation Strategy
+3. **Detailed Changes**
+- `cli.py`:
+  - Remove duplicate command functions
+  - Directly import and register command implementations
+- Command modules:
+  - Add Typer parameter annotations
+  - Include full command documentation
 
-### 1. Directory & Code Updates
+4. **Affected Files**
+```python
+[
+    "cli.py",
+    "commands/summarize_history.py",
+    "commands/generate_report.py",
+    "commands/feedback.py",
+    "commands/analyze_commit.py (new)"
+]
+```
+
+## Validation Plan
+1. Run all affected commands with:
 ```bash
-# Rename root directory
-mv git_summarize ai_git
-
-# Update all Python imports (example)
-sed -i 's/from git_summarize/from ai_git/g' ai_git/**/*.py
+python -m git_summarize summarize-history
+python -m git_summarize generate-report
+python -m git_summarize git-feedback
 ```
 
-### 2. Package Configuration (pyproject.toml)
-```toml
-[project]
-name = "ai-git"
-# ...
-[project.scripts]
-ai-git = "ai_git.cli:app"  # Updated path
-```
-
-### 3. Environment Variables
-```diff
-- GIT_SUMMARIZE_DEFAULT_MODEL
-+ AI_GIT_DEFAULT_MODEL
-```
-
-### 4. Documentation Sync
-1. Merge `ai_git/README.md` into root README
-2. Update all documentation references:
-```diff
-- git-summarize --help
-+ ai-git --help
-```
-
-### 5. Validation Checklist
-1. Reinstall package:
+2. Verify help documentation consistency:
 ```bash
-uv pip uninstall ai-git
-uv pip install -e .
+python -m git_summarize --help
 ```
-2. Verify functionality:
+
+## Rollback Procedure
 ```bash
-ai-git --list-models
-python3 -c "from ai_git import __version__; print(__version__)"
-```
-3. Check documentation links in:
-- ai_docs/rename_plan.md
-- ai_docs/refactor_plan.md
+git checkout HEAD -- cli.py commands/
