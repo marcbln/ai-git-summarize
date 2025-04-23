@@ -1,8 +1,8 @@
 from typing import Optional
 from rich.console import Console
 from rich.panel import Panel
-from git_summarize.ai_client import setup_openai
-from git_summarize.ai_summarizer import AISummarizer
+from ai_git.ai_client import setup_openai
+from ai_git.ai_summarizer import AISummarizer
 
 def summarize_history(
     range: str = "HEAD~7..HEAD",

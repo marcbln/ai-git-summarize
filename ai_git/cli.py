@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.style import Style
-from git_summarize.openrouter_models import get_openrouter_models, format_pricing
+from ai_git.openrouter_models import get_openrouter_models, format_pricing
 
 
 import yaml

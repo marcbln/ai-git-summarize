@@ -1,6 +1,6 @@
 # pyproject.toml
 [project]
-name = "git-summarize"
+name = "ai-git"
 version = "0.2.0"
 description = "Generate Git commit messages using Large Language Models (LLM) like GPT and Qwen through OpenRouter"
 dependencies = [
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-git-summarize = "git_summarize.cli:app"
+ai-git = "ai_git.cli:app"
 
 [tool.setuptools]
-packages = ["git_summarize"]
+packages = ["ai_git"]

@@ -1,4 +1,4 @@
-# git-summarize
+# ai-git
 
 A powerful command-line tool that leverages Large Language Models (LLMs) through OpenRouter to generate meaningful git commit messages by analyzing your staged changes.
 
@@ -16,7 +16,7 @@ A powerful command-line tool that leverages Large Language Models (LLMs) through
 1. Clone this repository:
 ```bash
 git clone git@github.com:marcbln/ai-git-summarize.git
-cd git-summarize
+cd ai-git-summarize
 ```
 
 2. Install using uv:
@@ -43,25 +43,25 @@ Basic usage:
 git add .
 
 # Generate a commit message
-git-summarize
+ai-git
 
 # Use a specific model
-git-summarize --model openrouter/anthropic/claude-3.5-sonnet
+ai-git --model openrouter/anthropic/claude-3.5-sonnet
 
 # Generate a short commit message
-git-summarize --short
+ai-git --short
 
 # Stage all changes automatically
-git-summarize --stage-all
+ai-git --stage-all
 
 # List available models
-git-summarize --list-models
+ai-git --list-models
 
 # Show detailed model information including pricing
-git-summarize --print-models-table
+ai-git --print-models-table
 
 # Refresh cached model information
-git-summarize --refresh-openrouter-models
+ai-git --refresh-openrouter-models
 ```
 
 The tool will:
@@ -87,7 +87,7 @@ The tool supports a wide range of LLMs through OpenRouter, including:
 - Nemotron 70B
 - And many more...
 
-Use `git-summarize --list-models` to see all available models.
+Use `ai-git --list-models` to see all available models.
 
 ## Configuration
 
@@ -102,3 +102,30 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ## License
 
 This project is licensed under the ALL License - see the LICENSE file for details.
+
+## AI-Powered Git Insights
+
+### Installation
+```bash
+pip install ai-git
+```
+
+### Commands
+
+#### `ai-git analyze-commit`
+Analyze specific commit messages with AI
+
+#### `ai-git generate-report`
+Create detailed reports from git history
+
+#### `ai-git git-summary`
+Show condensed summary of repository status
+
+#### `ai-git summarize-history`
+Generate AI summaries of commit timelines
+
+#### `ai-git openrouter`
+Manage OpenRouter model configurations
+
+#### `ai-git feedback`
+Provide feedback on AI summaries

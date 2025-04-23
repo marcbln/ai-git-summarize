@@ -2,9 +2,9 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 
-from git_summarize.ai_client import setup_openai
-from git_summarize.ai_summarizer import AISummarizer
-from git_summarize.git_operations import get_commit_diff
+from ai_git.ai_client import setup_openai
+from ai_git.ai_summarizer import AISummarizer
+from ai_git.git_operations import get_commit_diff
 
 def analyze_commit(
     commit_ref: str = typer.Argument("HEAD", help="Commit reference (hash, tag, HEAD, HEAD~N) to analyze"),
