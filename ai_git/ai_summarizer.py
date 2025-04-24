@@ -7,6 +7,7 @@ from rich import print as rprint
 from rich.panel import Panel
 from .prompts import PromptBuilder
 from .git_operations import get_file_content_at_commit # Assuming this will be added
+from .config_utils import resolve_model_alias
 
 
 class AISummarizer:
@@ -18,24 +19,35 @@ class AISummarizer:
 
     def _prepare_api_kwargs(self, messages: list, model: str, max_tokens: int = 100) -> Dict[str, Any]:
         """Prepare kwargs for API call based on model type."""
-        if model.startswith("openrouter/"):
-            actual_model = model.replace("openrouter/", "", 1)
-            print(f"Using OpenRouter with model: {actual_model}")
-            kwargs = {
-                "extra_headers": {
-                    "X-Title": "ai-git-summarize",
-                },
-                "model": actual_model,
-                "messages": messages,
-            }
-        else:
-            kwargs = {
-                "model": model,
-                "messages": messages,
-                "max_tokens": max_tokens
-            }
-        print(f"API configuration:\n{json.dumps(kwargs, indent=2)}")
-        return kwargs
+        try:
+            # Resolve model alias to full identifier
+            resolved_model = resolve_model_alias(model)
+            print(f"Model: {model} -> {resolved_model}")
+            
+            if resolved_model.startswith("openrouter/"):
+                actual_model = resolved_model.replace("openrouter/", "", 1)
+                print(f"Using OpenRouter with model: {actual_model}")
+                kwargs = {
+                    "extra_headers": {
+                        "X-Title": "ai-git-summarize",
+                    },
+                    "model": actual_model,
+                    "messages": messages,
+                }
+            else:
+                kwargs = {
+                    "model": resolved_model,
+                    "messages": messages,
+                    "max_tokens": max_tokens
+                }
+            
+            print(f"API configuration:\n{json.dumps(kwargs, indent=2)}")
+            return kwargs
+        except Exception as e:
+            # Log the error but don't handle UnknownModelAliasError here
+            # It should be handled at the command level (git_summary.py)
+            print(f"Error preparing API kwargs: {e}")
+            raise
 
     def _make_api_call(self, kwargs: Dict[str, Any]) -> Optional[str]:
         """Make API call with error handling and response validation."""

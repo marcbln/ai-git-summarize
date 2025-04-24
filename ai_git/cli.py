@@ -35,6 +35,7 @@ from .app import app
 app.add_typer(openrouter_app, name="openrouter", help="Manage OpenRouter models")
 
 app.command(name="git-feedback")(feedback)
+app.command()(git_summary)
 app.command()(summarize_history)
 app.command()(generate_report)
 app.command(name="git-analyze-commit")(analyze_commit)
