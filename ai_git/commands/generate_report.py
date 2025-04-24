@@ -9,12 +9,19 @@ from rich.console import Console
 from rich.panel import Panel
 from ..ai_client import setup_openai
 from ..ai_summarizer import AISummarizer
+from ..config_utils import resolve_model_alias, UnknownModelAliasError, get_available_aliases
 
 def generate_report(
     group: str,
     start_date: str,
     end_date: str,
-    output_format: str = "markdown"
+    output_format: str = "markdown",
+    model: str = typer.Option(
+        "openrouter/qwen/qwen-2.5-coder-32b-instruct",
+        "--model",
+        "-m",
+        help="Model ID or alias to use for generating the report"
+    )
 ) -> None:
     """Generate work report for a project group between dates"""
     console = Console()
@@ -52,11 +59,42 @@ def generate_report(
                           f"from [cyan]{start_date}[/cyan] to [cyan]{end_date}[/cyan]",
                           style="bold green"))
         
-        # Get model to use for AI analysis
-        model = "openrouter/qwen/qwen-2.5-coder-32b-instruct"
+        # Resolve model alias
+        try:
+            # Resolve model alias to full identifier
+            resolved_model = resolve_model_alias(model, raise_on_unknown=True)
+            if resolved_model != model:
+                console.print(f"\n[bold green]Model alias resolved:[/bold green] [cyan]{model}[/cyan] -> [yellow]{resolved_model}[/yellow]")
+        except UnknownModelAliasError:
+            # Get the available aliases
+            aliases = get_available_aliases()
+            
+            # Print an error message
+            console.print(f"\n[bold red]Error:[/bold red] Unknown model alias: [cyan]{model}[/cyan]")
+            
+            # Print the list of available aliases
+            if aliases:
+                console.print("\n[bold]Available model aliases:[/bold]")
+                
+                # Create a table to display the aliases
+                from rich.table import Table
+                table = Table(title="Model Aliases", show_header=True, header_style="bold magenta")
+                table.add_column("Alias", style="cyan")
+                table.add_column("Full Model Identifier", style="green")
+                
+                # Add rows to the table
+                for alias, full_id in sorted(aliases.items()):
+                    table.add_row(alias, full_id)
+                
+                console.print(table)
+            else:
+                console.print("\n[yellow]No model aliases found in config/model-aliases.yaml[/yellow]")
+            
+            # Exit with an error code
+            return
         
         # Aggregate project data
-        report_data = aggregate_project_data(projects, start_date, end_date, model)
+        report_data = aggregate_project_data(projects, start_date, end_date, resolved_model)
         
         # Generate output in requested format
         generate_output(report_data, output_format, console)
@@ -90,11 +128,16 @@ def load_project_groups_config(validate_paths: bool = True) -> Dict[str, List[st
 
 def aggregate_project_data(projects: List[str], start_date: str, end_date: str, model: str) -> Dict[str, Any]:
     """Aggregate git history data from multiple projects."""
-    client = setup_openai(model)
+    # Resolve model alias
+    resolved_model = resolve_model_alias(model)
+    if resolved_model != model:
+        print(f"Model alias resolved: {model} -> {resolved_model}")
+        
+    client = setup_openai(resolved_model)
     ai_summarizer = AISummarizer(client)
     
     report_data = ai_summarizer.generate_project_report(
-        projects, start_date, end_date, model
+        projects, start_date, end_date, resolved_model
     )
     
     if report_data["total_commits"] > 0:
@@ -103,7 +146,7 @@ def aggregate_project_data(projects: List[str], start_date: str, end_date: str, 
             all_commits.extend(project.get("commits", []))
             
         report_data["ai_analysis"] = {
-            "summary": ai_summarizer._summarize_commit_history(all_commits, model, "technical"),
+            "summary": ai_summarizer._summarize_commit_history(all_commits, resolved_model, "technical"),
             "key_activities": categorize_activities(all_commits)
         }
     

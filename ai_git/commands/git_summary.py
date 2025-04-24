@@ -88,7 +88,7 @@ def git_summary(
         # Exit with an error code
         sys.exit(1)
         
-    client = setup_openai(model)
+    client = setup_openai(resolved_model)
     ai_summarizer = AISummarizer(client)
 
     # Check for unstaged changes
@@ -114,11 +114,11 @@ def git_summary(
     if diff_text:
         commit_message = ai_summarizer.summarize_changes(
             diff_text,
-            model=model,
+            model=resolved_model,
             strategy=strategy
         )
         if commit_message:
-            console.print(f"\n[bold]Suggested commit message (from {model}):[/bold]")
+            console.print(f"\n[bold]Suggested commit message (from {resolved_model}):[/bold]")
             console.print(Panel(commit_message, border_style="green"))
 
             if always_accept_commit_message:

@@ -20,12 +20,11 @@ class AISummarizer:
     def _prepare_api_kwargs(self, messages: list, model: str, max_tokens: int = 100) -> Dict[str, Any]:
         """Prepare kwargs for API call based on model type."""
         try:
-            # Resolve model alias to full identifier
-            resolved_model = resolve_model_alias(model)
-            print(f"Model: {model} -> {resolved_model}")
+            # The model parameter is already the resolved identifier
+            print(f"Using model: {model}")
             
-            if resolved_model.startswith("openrouter/"):
-                actual_model = resolved_model.replace("openrouter/", "", 1)
+            if model.startswith("openrouter/"):
+                actual_model = model.replace("openrouter/", "", 1)
                 print(f"Using OpenRouter with model: {actual_model}")
                 kwargs = {
                     "extra_headers": {
@@ -36,7 +35,7 @@ class AISummarizer:
                 }
             else:
                 kwargs = {
-                    "model": resolved_model,
+                    "model": model,
                     "messages": messages,
                     "max_tokens": max_tokens
                 }
@@ -52,7 +51,12 @@ class AISummarizer:
     def _make_api_call(self, kwargs: Dict[str, Any]) -> Optional[str]:
         """Make API call with error handling and response validation."""
         try:
-            print(f"\nSending API request to {kwargs.get('model', 'unknown model')}...")
+            model_display = kwargs.get('model', 'unknown model')
+            # If this is an OpenRouter model (which would have had the prefix removed in _prepare_api_kwargs),
+            # we should display it with the openrouter/ prefix in the message
+            if 'extra_headers' in kwargs and 'X-Title' in kwargs['extra_headers']:
+                model_display = f"openrouter/{model_display}"
+            print(f"\nSending API request to {model_display}...")
             response = self.client.chat.completions.create(**kwargs)
             print("Successfully received API response")
             print(f"\nFull API response: {response.json()}")

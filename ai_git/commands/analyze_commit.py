@@ -5,6 +5,7 @@ from rich.panel import Panel
 from ai_git.ai_client import setup_openai
 from ai_git.ai_summarizer import AISummarizer
 from ai_git.git_operations import get_commit_diff
+from ai_git.config_utils import resolve_model_alias, UnknownModelAliasError, get_available_aliases
 
 def analyze_commit(
     commit_ref: str = typer.Argument("HEAD", help="Commit reference (hash, tag, HEAD, HEAD~N) to analyze"),
@@ -20,10 +21,44 @@ def analyze_commit(
 
     console.print(Panel(f"Analyzing commit: [bold cyan]{commit_ref}[/]", title="Commit Analysis", expand=False))
 
+    # Resolve model alias
+    try:
+        # Resolve model alias to full identifier
+        resolved_model = resolve_model_alias(model, raise_on_unknown=True)
+        if resolved_model != model:
+            console.print(f"\n[bold green]Model alias resolved:[/bold green] [cyan]{model}[/cyan] -> [yellow]{resolved_model}[/yellow]")
+    except UnknownModelAliasError:
+        # Get the available aliases
+        aliases = get_available_aliases()
+        
+        # Print an error message
+        console.print(f"\n[bold red]Error:[/bold red] Unknown model alias: [cyan]{model}[/cyan]")
+        
+        # Print the list of available aliases
+        if aliases:
+            console.print("\n[bold]Available model aliases:[/bold]")
+            
+            # Create a table to display the aliases
+            from rich.table import Table
+            table = Table(title="Model Aliases", show_header=True, header_style="bold magenta")
+            table.add_column("Alias", style="cyan")
+            table.add_column("Full Model Identifier", style="green")
+            
+            # Add rows to the table
+            for alias, full_id in sorted(aliases.items()):
+                table.add_row(alias, full_id)
+            
+            console.print(table)
+        else:
+            console.print("\n[yellow]No model aliases found in config/model-aliases.yaml[/yellow]")
+        
+        # Exit with an error code
+        raise typer.Exit(code=1)
+
     # Setup AI Client
     try:
-        # Pass the model argument to setup_openai
-        client = setup_openai(model)
+        # Pass the resolved model to setup_openai
+        client = setup_openai(resolved_model)
         if not client:
             console.print("[bold red]Error:[/bold red] Failed to set up AI client. Check API key and configuration.")
             raise typer.Exit(code=1)
@@ -47,7 +82,7 @@ def analyze_commit(
     try:
         analysis_result = summarizer.analyze_commit_impact(
             diff_text=diff_text,
-            model=model,
+            model=resolved_model,
             commit_ref=commit_ref # Pass the reference for context fetching
         )
     except Exception as e:
