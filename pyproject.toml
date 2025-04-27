@@ -17,3 +17,16 @@ ai-git = "ai_git.cli:app"
 
 [tool.setuptools]
 packages = ["ai_git"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-cov>=6.1.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = "."
+testpaths = "tests"
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
