@@ -80,19 +80,25 @@ class AISummarizer:
             
     def _strip_backticks(self, text: Optional[str]) -> Optional[str]:
         """Removes surrounding backticks and standalone backtick lines."""
-        if not text:
-            return text
+        if text is None:
+            return None
 
         text = text.strip()
-        
-        # Remove surrounding triple/single backticks first
+
+        if not text:
+            return None
+
+        # Remove surrounding backticks (any quantity)
+        # Remove surrounding backticks, prioritizing triple backticks with language ID
         triple_match = re.match(r"^```(?:[a-zA-Z0-9_.-]*)?\s*\n?(.*?)\n?```$", text, re.DOTALL)
         if triple_match:
             text = triple_match.group(1).strip()
         else:
-            single_match = re.match(r"^`(.*?)`$", text, re.DOTALL)
-            if single_match:
-                text = single_match.group(1).strip()
+            # Fallback to matching any number of surrounding backticks (single, double, etc.)
+            # This handles cases like `code` or ``code`` after the triple check failed.
+            general_match = re.match(r"^`+(.*?)`+$", text, re.DOTALL)
+            if general_match:
+                text = general_match.group(1).strip()
 
         # Remove lines containing only backticks (any quantity)
         cleaned_lines = [
@@ -100,7 +106,7 @@ class AISummarizer:
             for line in text.split('\n')
             if line.strip().strip('`').strip()  # True if line has non-backtick content
         ]
-        
+
         return '\n'.join(cleaned_lines).strip()
 
     def generate_code_feedback(self, diff_text: str, model: str) -> Optional[str]:
