@@ -79,26 +79,29 @@ class AISummarizer:
             return None
             
     def _strip_backticks(self, text: Optional[str]) -> Optional[str]:
-        """Removes surrounding single or triple backticks, including language identifiers."""
+        """Removes surrounding backticks and standalone backtick lines."""
         if not text:
             return text
 
-        text = text.strip() # Remove leading/trailing whitespace
-
-        # Pattern for triple backticks with optional language identifier
-        # Handles ```lang\ncontent``` or ```content``` or ```lang content```
-        # re.DOTALL allows '.' to match newlines
+        text = text.strip()
+        
+        # Remove surrounding triple/single backticks first
         triple_match = re.match(r"^```(?:[a-zA-Z0-9_.-]*)?\s*\n?(.*?)\n?```$", text, re.DOTALL)
         if triple_match:
-            return triple_match.group(1).strip()
+            text = triple_match.group(1).strip()
+        else:
+            single_match = re.match(r"^`(.*?)`$", text, re.DOTALL)
+            if single_match:
+                text = single_match.group(1).strip()
 
-        # Pattern for single backticks
-        single_match = re.match(r"^`(.*?)`$", text, re.DOTALL)
-        if single_match:
-            return single_match.group(1).strip()
-
-        # If no backticks match, return original text
-        return text
+        # Remove lines containing only backticks (any quantity)
+        cleaned_lines = [
+            line.rstrip('\n')
+            for line in text.split('\n')
+            if line.strip().strip('`').strip()  # True if line has non-backtick content
+        ]
+        
+        return '\n'.join(cleaned_lines).strip()
 
     def generate_code_feedback(self, diff_text: str, model: str) -> Optional[str]:
         """Generate code quality feedback using AI.

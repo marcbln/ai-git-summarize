@@ -4,7 +4,6 @@ Test script for model alias resolution.
 This script tests the resolve_model_alias function with various inputs.
 """
 
-import sys
 from ai_git.config_utils import resolve_model_alias
 
 def test_model_alias_resolution():

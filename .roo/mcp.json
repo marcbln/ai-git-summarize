@@ -4,6 +4,13 @@
       "url": "https://gitmcp.io/The-Pocket/PocketFlow",
       "disabled": false,
       "autoApprove": []
+    },
+    "venv-management": {
+      "command": "uvx",
+      "args": [
+        "--from=git+https://github.com/sparfenyuk/venv-mcp-server.git",
+        "venv-mcp-server"
+      ]
     }
   }
 }

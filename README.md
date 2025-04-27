@@ -95,6 +95,31 @@ The tool looks for the following environment variables:
 - `OPENROUTER_API_KEY`: Your OpenRouter API key (required)
 - `GIT_SUMMARIZE_DEFAULT_MODEL`: Default model to use (optional) [TODO]
 
+## Testing
+
+The test suite uses pytest. To run all tests:
+
+```bash
+pytest -v tests/
+```
+
+Key test components:
+- `test_ai_summarizer.py`: Core summarization functionality
+  - Backtick stripping (`test_strip_backticks`)
+  - AI response validation
+  - Error handling for API calls
+- `test_model_alias.py`: Model alias resolution system
+
+To run tests with coverage report:
+```bash
+pytest --cov=ai_git --cov-report=term-missing
+```
+
+Example testing a specific component:
+```bash
+pytest -v tests/test_ai_summarizer.py::test_strip_backticks
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
