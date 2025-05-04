@@ -1,19 +1,20 @@
 # Model aliases configuration
 # Format: alias: full_model_identifier
 
-# OpenAI examples
+# ---- OpenAI
 gpt4o: openai/gpt-4o-2024-05-13
 
-# OpenRouter examples
+# ---- OpenRouter
 claude35: openrouter/anthropic/claude-3.5-sonnet
 claude37: openrouter/anthropic/claude-3.7-sonnet
 geminiflash20-free: openrouter/google/gemini-2.0-flash-exp:free
-geminiflash25: google/gemini-2.5-flash-preview
-gemini25pro: openrouter/google/gemini-2.5-pro-exp-03-25
+geminiflash25: openrouter/google/gemini-2.5-flash-preview
+gemini25pro-free: openrouter/google/gemini-2.5-pro-exp-03-25
 qwen32b: openrouter/qwen/qwen-2.5-coder-32b-instruct
 qwenmax: openrouter/qwen/qwen-max
 deepseekr1: openrouter/deepseek/deepseek-r1-distill-qwen-32b
 deepseekr1free: openrouter/deepseek/deepseek-r1:free
 deepseekchatfree: openrouter/deepseek/deepseek-chat:free
 qwq32b: openrouter/qwen/qwq-32b
+qwen3: openrouter/qwen/qwen3-30b-a3b:free
 glm4-free: openrouter/thudm/glm-4-32b:free
