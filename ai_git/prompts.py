@@ -129,7 +129,7 @@ class PromptBuilder:
    - SHORT: "type: description" (one line)
    - DETAILED: "type: description" followed by bullet points
 
-Output only the commit message."""
+Output ONLY the commit message. Absolutely no additional text, formatting, labels (like "SHORT:", "DETAILED:", "### Short Commit Message", etc.). The output must be the raw commit message content and nothing else."""
             },
             {
                 "role": "user",
