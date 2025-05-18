@@ -5,6 +5,11 @@
       "disabled": false,
       "autoApprove": []
     },
+    "AI Common Docs": {
+      "url": "https://gitmcp.io/marcbln/ai-commons",
+      "disabled": false,
+      "autoApprove": []
+    },
     "venv-management": {
       "command": "uvx",
       "args": [
