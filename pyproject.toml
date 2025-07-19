@@ -10,6 +10,7 @@ dependencies = [
     "rich>=13.0.0",
     "inquirer>=3.1.3",
     "pyyaml>=6.0.2",
+    "ai-commons@git+https://github.com/marcbln/ai-commons.git@main",
 ]
 
 [project.scripts]
