@@ -1,9 +1,11 @@
 import json
 import re
 import os
+import logging
 from typing import Optional, Dict, Any, List
-from openai import OpenAI
+from openai import OpenAI, RateLimitError, APIStatusError, APIConnectionError
 from rich import print as rprint
+from .retry_utils import RetryConfig, with_retry
 from rich.panel import Panel
 from .prompts import PromptBuilder
 from .git_operations import get_file_content_at_commit # Assuming this will be added
@@ -13,9 +15,11 @@ from .config_utils import resolve_model_alias
 class AISummarizer:
     """Class to handle AI-powered code summarization and feedback."""
     
-    def __init__(self, client: OpenAI):
-        """Initialize with an OpenAI client instance."""
+    def __init__(self, client: OpenAI, retry_config: Optional[RetryConfig] = None):
+        """Initialize with an OpenAI client instance and retry configuration."""
         self.client = client
+        self.retry_config = retry_config or RetryConfig()
+        self.logger = logging.getLogger(__name__)
 
     def _prepare_api_kwargs(self, messages: list, model: str, max_tokens: int = 100) -> Dict[str, Any]:
         """Prepare kwargs for API call based on model type."""
@@ -50,32 +54,31 @@ class AISummarizer:
 
     def _make_api_call(self, kwargs: Dict[str, Any]) -> Optional[str]:
         """Make API call with error handling and response validation."""
-        try:
+        
+        retryable_exceptions = (RateLimitError, APIStatusError, APIConnectionError)
+
+        @with_retry(self.retry_config, retryable_exceptions)
+        def api_call_with_retry():
             model_display = kwargs.get('model', 'unknown model')
-            # If this is an OpenRouter model (which would have had the prefix removed in _prepare_api_kwargs),
-            # we should display it with the openrouter/ prefix in the message
             if 'extra_headers' in kwargs and 'X-Title' in kwargs['extra_headers']:
                 model_display = f"openrouter/{model_display}"
-            print(f"\nSending API request to {model_display}...")
+            
+            self.logger.info(f"Sending API request to {model_display}...")
             response = self.client.chat.completions.create(**kwargs)
-            print("Successfully received API response")
-            print(f"\nFull API response: {response.json()}")
-
-            # Validate response
+            self.logger.info("Successfully received API response")
+            
             if (not response or not hasattr(response, 'choices') or
                 not response.choices or not hasattr(response.choices[0], 'message') or
                 not hasattr(response.choices[0].message, 'content')):
-                print("Error: Invalid API response structure")
+                self.logger.error("Invalid API response structure")
                 return None
 
             return response.choices[0].message.content.strip()
 
+        try:
+            return api_call_with_retry()
         except Exception as e:
-            print(f"\nError when calling API: {type(e).__name__} - {str(e)}")
-            if hasattr(e, 'response'):
-                print(f"Response details: {e.response}")
-            if hasattr(e, '__dict__'):
-                print(f"Full error details: {e.__dict__}")
+            self.logger.error(f"API call failed after all retries: {e}")
             return None
             
     def _strip_backticks(self, text: Optional[str]) -> Optional[str]:

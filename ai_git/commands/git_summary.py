@@ -9,6 +9,7 @@ from rich.table import Table
 from typing import Optional
 from ..ai_client import setup_openai
 from ..ai_summarizer import AISummarizer
+from ..retry_utils import RetryConfig
 from ..git_operations import (
     check_unstaged_changes,
     stage_all_changes,
@@ -39,6 +40,9 @@ def git_summary(
     always_accept_commit_message: bool = typer.Option(False, "--always-accept-commit-message", "-y",
                                                      help="Skip confirmation prompt and accept suggested commit message"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Test mode: only resolve model alias and print info without making git operations"),
+    retries: int = typer.Option(5, "--retries", help="Number of retry attempts for API calls (default: 5)."),
+    min_wait: int = typer.Option(2, "--min-wait", help="Minimum wait time in seconds between retries (default: 2)."),
+    max_wait: int = typer.Option(10, "--max-wait", help="Maximum wait time in seconds between retries (default: 10)."),
 ) -> None:
     """Summarize git changes and create commits (git-summary)."""
     console = Console()
@@ -89,7 +93,8 @@ def git_summary(
         sys.exit(1)
         
     client = setup_openai(resolved_model)
-    ai_summarizer = AISummarizer(client)
+    retry_config = RetryConfig(max_retries=retries, min_wait=min_wait, max_wait=max_wait)
+    ai_summarizer = AISummarizer(client, retry_config=retry_config)
 
     # Check for unstaged changes
     has_unstaged, unstaged_diff = check_unstaged_changes()
