@@ -17,4 +17,5 @@ deepseekr1free: openrouter/deepseek/deepseek-r1:free
 deepseekchatfree: openrouter/deepseek/deepseek-chat:free
 qwq32b: openrouter/qwen/qwq-32b
 qwen3: openrouter/qwen/qwen3-30b-a3b:free
+qwen3coder: openrouter/qwen/qwen3-coder:free
 glm4-free: openrouter/thudm/glm-4-32b:free
