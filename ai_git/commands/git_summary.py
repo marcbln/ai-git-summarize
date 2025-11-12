@@ -23,7 +23,7 @@ from ..openrouter_models import get_openrouter_models
 @app.command()
 def git_summary(
     model: str = typer.Option(
-        "openrouter/google/gemini-2.0-flash-exp:free", # "openrouter/qwen/qwen-2.5-coder-32b-instruct",
+        "m2-free", # "openrouter/qwen/qwen-2.5-coder-32b-instruct",
         "--model",
         "-m",
         help="Model ID or alias to use for generating commit messages. For OpenRouter models, prefix with 'openrouter/'. "
