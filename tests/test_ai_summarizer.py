@@ -96,3 +96,23 @@ def test_non_retryable_error_fails_immediately(mock_openai_client):
         assert result is None
         assert mock_openai_client.chat.completions.create.call_count == 1
         assert mock_sleep.call_count == 0
+
+
+def test_summarize_changes_forces_newline(mock_openai_client):
+    """Test that missing blank line between subject and body is inserted programmatically."""
+    # Mock the OpenAI client to return a malformed commit message (missing blank line)
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock()]
+    mock_response.choices[0].message.content = "feat: add new feature\n- implemented feature X\n- added tests"
+
+    mock_openai_client.chat.completions.create.return_value = mock_response
+
+    retry_config = RetryConfig(max_retries=3, min_wait=0.01, max_wait=0.01)
+    summarizer = AISummarizer(mock_openai_client, retry_config=retry_config)
+
+    # Call summarize_changes with a dummy diff and strategy
+    result = summarizer.summarize_changes("dummy diff text", "test-model", "detailed")
+
+    # Assert that the returned string has the blank line inserted
+    expected = "feat: add new feature\n\n- implemented feature X\n- added tests"
+    assert result == expected

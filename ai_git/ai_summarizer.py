@@ -338,7 +338,17 @@ class AISummarizer:
         
         kwargs = self._prepare_api_kwargs(messages, model)
         summary = self._make_api_call(kwargs)
-        return self._strip_backticks(summary)
+        clean_summary = self._strip_backticks(summary)
+        
+        # Insert missing blank line between subject and body if needed
+        if clean_summary:
+            lines = clean_summary.splitlines()
+            if len(lines) > 1 and lines[1].strip():
+                print("[yellow]Adjusting format: Inserting missing blank line after subject.[/yellow]")
+                lines.insert(1, "")
+                clean_summary = "\n".join(lines)
+        
+        return clean_summary
 
     def analyze_commit_impact(
         self,

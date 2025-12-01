@@ -13,7 +13,7 @@ class PromptBuilder:
                            "diffs and generates Conventional Commit messages. "
                            "The summary line must start with one of: feat, fix, chore, docs, test, refactor, perf, or ci "
                            "followed by a concise description. Example: 'feat: add new authentication module'. "
-                           "After the summary, provide a detailed explanation of the changes "
+                           "After the summary line, YOU MUST LEAVE ONE EMPTY LINE, and then provide a detailed explanation of the changes "
                            "using bullet points when appropriate. "
                            "Output only the commit message, without any additional labels or explanations."
             },
@@ -87,7 +87,7 @@ class PromptBuilder:
                            "   - ci: CI/CD pipeline changes\n"
                            "2. Choose the most specific applicable type\n"
                            "3. Format as: 'type: description'\n"
-                           f"{'4. After the summary, provide detailed bullet points of changes' if detailed else ''}"
+                           f"{'4. After the summary line, YOU MUST LEAVE ONE EMPTY LINE, then provide detailed bullet points of changes' if detailed else ''}"
                            "\nOutput only the commit message, no additional text."
             },
             {
@@ -127,7 +127,7 @@ class PromptBuilder:
 
 3. Format:
    - SHORT: "type: description" (one line)
-   - DETAILED: "type: description" followed by bullet points
+   - DETAILED: "type: description", followed by ONE BLANK LINE, followed by bullet points
 
 Output ONLY the commit message. Absolutely no additional text, formatting, labels (like "SHORT:", "DETAILED:", "### Short Commit Message", etc.). The output must be the raw commit message content and nothing else."""
             },
